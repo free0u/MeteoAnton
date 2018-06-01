@@ -1,0 +1,4 @@
+class SensorDallasTemp {
+public:
+    SensorDallasTemp();
+};
