@@ -1,7 +1,31 @@
-dependencies:
-    pre:
-        - sudo pip install -U platformio
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.1
+    working_directory: ~/repo
 
-test:
-    override:
-        - platformio ci main.cpp --board=nodemcuv2
+    steps:
+      - checkout
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -U platformio
+            platformio update
+
+      - run:
+          name: platformio run
+          command: |
+            . venv/bin/activate
+            platformio run
+
+      - run:
+          name: platformio ci
+          command: |
+            . venv/bin/activate
+            platformio ci main.cpp --board=nodemcuv2
+            
+            
