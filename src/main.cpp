@@ -5,21 +5,21 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-#include "WiFiCredentials.h"
-
-const char* ssid = WIFI_SSID;
-const char* password = WIFI_PASSWORD;
+#include "WiFiConfig.h"
 
 void setup() {
-  Serial.begin(115200);
-  Serial.println("Booting");
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
-  }
+    Serial.begin(115200);
+    Serial.println("Booting and setup");
+
+    // setup wifi connection
+    // if cant connect to wifi, configurator will be started
+    // @todo: start configurator by pressing button, elsewhere just stay disconnected
+    WiFiConfig wifiConfig;
+    wifiConfig.connectWiFi(false);
+
+    
+
+    
 
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
