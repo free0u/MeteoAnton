@@ -1,14 +1,14 @@
-#include "SensorDallasTemp.h"
 #include <HardwareSerial.h>
 
+#include "SensorDallasTemp.h"
+
 // function to print a device address
-void printAddress(DeviceAddress deviceAddress)
-{
-  for (uint8_t i = 0; i < 8; i++)
-  {
-    if (deviceAddress[i] < 16) Serial.print("0");
-    Serial.print(deviceAddress[i], HEX);
-  }
+void printAddress(DeviceAddress deviceAddress) {
+    for (uint8_t i = 0; i < 8; i++) {
+        if (deviceAddress[i] < 16)
+            Serial.print("0");
+        Serial.print(deviceAddress[i], HEX);
+    }
 }
 
 SensorDallasTemp::SensorDallasTemp() {
@@ -27,21 +27,19 @@ SensorDallasTemp::SensorDallasTemp() {
     Serial.println(" devices.");
 
     // Loop through each device, print out address
-    for(int i=0;i<numberOfDevices; i++)
-    {
+    for (int i = 0; i < numberOfDevices; i++) {
         // Search the wire for address
-        if(sensors->getAddress(tempDeviceAddress, i))
-        {
+        if (sensors->getAddress(tempDeviceAddress, i)) {
             Serial.print("Found device ");
             Serial.print(i, DEC);
             Serial.print(" with address: ");
             printAddress(tempDeviceAddress);
             Serial.println();
-            
+
             Serial.print("Resolution actually set to: ");
-            Serial.print(sensors->getResolution(tempDeviceAddress), DEC); 
+            Serial.print(sensors->getResolution(tempDeviceAddress), DEC);
             Serial.println();
-        }else{
+        } else {
             Serial.print("Found ghost device at ");
             Serial.print(i, DEC);
             Serial.print(" but could not detect address. Check power and cabling");
@@ -50,23 +48,19 @@ SensorDallasTemp::SensorDallasTemp() {
 };
 
 // function to print the temperature for a device
-float SensorDallasTemp::printTemperature()
-{
-  sensors->requestTemperatures(); // Send the command to get temperatures
-  for(int i=0;i<numberOfDevices; i++)
-  {
-    if(sensors->getAddress(tempDeviceAddress, i))
-	{
-		Serial.print("Temperature for device: ");
-        printAddress(tempDeviceAddress);
-        Serial.println(":");
-		
-        float tempC = sensors->getTempC(tempDeviceAddress);
-        Serial.print("Temp C: ");
-        Serial.println(tempC);
-        return tempC;
-    } 
-	//else ghost device! Check your power requirements and cabling
-	
-  }
+float SensorDallasTemp::printTemperature() {
+    sensors->requestTemperatures(); // Send the command to get temperatures
+    for (int i = 0; i < numberOfDevices; i++) {
+        if (sensors->getAddress(tempDeviceAddress, i)) {
+            Serial.print("Temperature for device: ");
+            printAddress(tempDeviceAddress);
+            Serial.println(":");
+
+            float tempC = sensors->getTempC(tempDeviceAddress);
+            Serial.print("Temp C: ");
+            Serial.println(tempC);
+            return tempC;
+        }
+        // else ghost device! Check your power requirements and cabling
+    }
 }

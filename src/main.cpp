@@ -1,7 +1,7 @@
 #include "FS.h"
 
-#include "WiFiConfig.h"
 #include "OTAUpdate.h"
+#include "WiFiConfig.h"
 
 OTAUpdate otaUpdate;
 
@@ -18,7 +18,6 @@ void setup() {
     // configure and start OTA update server
     otaUpdate.setup();
 
-
     // Serial.print("SPIFFS: ");
     // Serial.println(SPIFFS.begin());
     // FSInfo fs_info;
@@ -28,11 +27,10 @@ void setup() {
 }
 
 void loop() {
-  otaUpdate.handle();
-  delay(1000);
-  Serial.println("Hello");
+    otaUpdate.handle();
+    delay(1000);
+    Serial.println("Hello world");
 }
-
 
 //  /**
 //   * The MIT License (MIT)
@@ -40,25 +38,34 @@ void loop() {
 //   * Copyright (c) 2018 by ThingPulse, Daniel Eichhorn
 //   * Copyright (c) 2018 by Fabrice Weinberg
 //   *
-//   * Permission is hereby granted, free of charge, to any person obtaining a copy
-//   * of this software and associated documentation files (the "Software"), to deal
-//   * in the Software without restriction, including without limitation the rights
+//   * Permission is hereby granted, free of charge, to any person obtaining a
+//   copy
+//   * of this software and associated documentation files (the "Software"), to
+//   deal
+//   * in the Software without restriction, including without limitation the
+//   rights
 //   * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 //   * copies of the Software, and to permit persons to whom the Software is
 //   * furnished to do so, subject to the following conditions:
 //   *
-//   * The above copyright notice and this permission notice shall be included in all
+//   * The above copyright notice and this permission notice shall be included
+//   in all
 //   * copies or substantial portions of the Software.
 //   *
-//   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//   OR
 //   * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//   * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//   * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//   THE
 //   * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//   * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//   * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//   * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//   FROM,
+//   * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//   THE
 //   * SOFTWARE.
 //   *
-//   * ThingPulse invests considerable time and money to develop these open source libraries.
+//   * ThingPulse invests considerable time and money to develop these open
+//   source libraries.
 //   * Please support us by buying our products (and not the clones) from
 //   * https://thingpulse.com
 //   *
@@ -168,10 +175,8 @@ void loop() {
 //   uint8_t color = 1;
 //   for (int16_t i=0; i<display.getHeight()/2; i+=3) {
 //     display.setColor((color % 2 == 0) ? BLACK : WHITE); // alternate colors
-//     display.fillRect(i, i, display.getWidth() - i*2, display.getHeight() - i*2);
-//     display.display();
-//     delay(10);
-//     color++;
+//     display.fillRect(i, i, display.getWidth() - i*2, display.getHeight() -
+//     i*2); display.display(); delay(10); color++;
 //   }
 //   // Reset back to WHITE
 //   display.setColor(WHITE);
@@ -193,17 +198,14 @@ void loop() {
 //   //  ------|-----
 //   //   0100 | 1000
 //   //
-//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2, display.getHeight()/4, 0b00000001);
-//   display.display();
-//   delay(200);
-//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2, display.getHeight()/4, 0b00000011);
-//   display.display();
-//   delay(200);
-//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2, display.getHeight()/4, 0b00000111);
-//   display.display();
-//   delay(200);
-//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2, display.getHeight()/4, 0b00001111);
-//   display.display();
+//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2,
+//   display.getHeight()/4, 0b00000001); display.display(); delay(200);
+//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2,
+//   display.getHeight()/4, 0b00000011); display.display(); delay(200);
+//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2,
+//   display.getHeight()/4, 0b00000111); display.display(); delay(200);
+//   display.drawCircleQuads(display.getWidth()/2, display.getHeight()/2,
+//   display.getHeight()/4, 0b00001111); display.display();
 // }
 
 // void printBuffer(void) {

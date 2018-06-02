@@ -1,15 +1,16 @@
 #ifndef WiFiConfig_h
 #define WiFiConfig_h
 
-#include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
-#include <WiFiManager.h> 
+#include <ESP8266WiFi.h>
+#include <WiFiManager.h>
 
 class WiFiConfig {
-private:
+  private:
     WiFiManager wifiManager;
-public:
+
+  public:
     void connectWiFi(bool needReset) {
         if (needReset) {
             wifiManager.resetSettings();

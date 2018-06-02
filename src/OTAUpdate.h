@@ -47,9 +47,7 @@ class OTAUpdate {
         Serial.print("IP address: ");
         Serial.println(WiFi.localIP());
     }
-    void handle() {
-        ArduinoOTA.handle();
-    }
+    void handle() { ArduinoOTA.handle(); }
 };
 
 #endif
