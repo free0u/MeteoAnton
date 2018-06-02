@@ -21,13 +21,3 @@ jobs:
           command: |
             . pl/bin/activate
             platformio run
-
-      - run:
-          name: platformio ci
-          command: |
-            . pl/bin/activate
-            pwd
-            ls -lah
-            platformio ci src/main.cpp --board=nodemcuv2
-            
-            
