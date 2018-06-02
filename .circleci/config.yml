@@ -26,6 +26,8 @@ jobs:
           name: platformio ci
           command: |
             . pl/bin/activate
-            platformio ci main.cpp --board=nodemcuv2
+            pwd
+            ls -lah
+            platformio ci src/main.cpp --board=nodemcuv2
             
             
