@@ -1,9 +1,13 @@
 #include "FS.h"
-
+#include "SSD1306.h"
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
 
 OTAUpdate otaUpdate;
+SSD1306 display(0x3C, D3, D5);
+
+#define LED D6
+#define BUTTON D7
 
 void setup() {
     Serial.begin(115200);
@@ -18,6 +22,11 @@ void setup() {
     // configure and start OTA update server
     otaUpdate.setup();
 
+    pinMode(LED, OUTPUT);
+    digitalWrite(LED, LOW);
+
+    pinMode(BUTTON, INPUT);
+
     // Serial.print("SPIFFS: ");
     // Serial.println(SPIFFS.begin());
     // FSInfo fs_info;
@@ -26,10 +35,46 @@ void setup() {
     // Serial.println(fs_info.usedBytes);
 }
 
+bool ledOn = false;
+
+int cnt = 0;
+
+void switchLed() {
+    if (ledOn) {
+        analogWrite(LED, 0);
+    } else {
+        analogWrite(LED, 5);
+    }
+    ledOn = !ledOn;
+}
+
+void dimLed() {
+    int newDim = cnt * 100 % 1024;
+    analogWrite(LED, newDim);
+    cnt++;
+}
+
+// ENUM
+// LED state: OFF, SENSORS, NETWORK
+
 void loop() {
     otaUpdate.handle();
     delay(1000);
-    Serial.println("Hello world");
+    int buttonState = digitalRead(BUTTON);
+    if (buttonState == HIGH) {
+        Serial.println("Button on");
+        switchLed();
+    } else {
+        Serial.println("Button off");
+    }
+
+    // IF button LONG PRESS and UPTIME smaller 1 minute
+    //     start WiFi Manager
+
+    // IF OLED works longer 1 minute
+    //     OLED state -> OFF
+    // IF button PUSHED
+    //     OLED state -> NEXT
 }
 
 //  /**
