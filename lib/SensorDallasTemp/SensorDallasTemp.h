@@ -1,7 +1,7 @@
 #include <DallasTemperature.h>
 #include <OneWire.h>
 
-#define ONE_WIRE_BUS D3
+#define ONE_WIRE_BUS D1
 #define TEMPERATURE_PRECISION 9
 
 class SensorDallasTemp {
