@@ -29,6 +29,12 @@ void displayIp(SSD1306 display, int cnt) {
 
 SensorDallasTemp *temp;
 
+#include <Adafruit_BME280.h>
+#include <Adafruit_Sensor.h>
+
+#define SEALEVELPRESSURE_HPA (1013.25)
+Adafruit_BME280 bme; // I2C
+
 void setup() {
     Serial.begin(115200);
     Serial.println("Booting and setup");
@@ -51,6 +57,11 @@ void setup() {
 
     // DS18B20 temperature
     temp = new SensorDallasTemp();
+
+    // BME280
+    if (!bme.begin(0x76)) {
+        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    }
 
     pinMode(LED, OUTPUT);
     digitalWrite(LED, LOW);
@@ -213,6 +224,27 @@ void loop() {
         timeSinceLastModeSwitch = millis();
     }
     counter++;
+
+    // BME 280 begin
+    Serial.print("Temperature = ");
+    Serial.print(bme.readTemperature());
+    Serial.println(" *C");
+
+    Serial.print("Pressure = ");
+
+    Serial.print(bme.readPressure() / 100.0F);
+    Serial.println(" hPa");
+
+    Serial.print("Approx. Altitude = ");
+    Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
+    Serial.println(" m");
+
+    Serial.print("Humidity = ");
+    Serial.print(bme.readHumidity());
+    Serial.println(" %");
+
+    Serial.println();
+    // BME 280 end
 
     delay(1000);
     int buttonState = digitalRead(BUTTON);
