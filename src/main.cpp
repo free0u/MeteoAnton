@@ -35,6 +35,12 @@ SensorDallasTemp *temp;
 #define SEALEVELPRESSURE_HPA (1013.25)
 Adafruit_BME280 bme; // I2C
 
+// DHT11
+#include "DHT.h"
+#define DHTPIN D8     // what digital pin we're connected to
+#define DHTTYPE DHT11 // DHT 11
+DHT dht(DHTPIN, DHTTYPE);
+
 void setup() {
     Serial.begin(115200);
     Serial.println("Booting and setup");
@@ -63,8 +69,14 @@ void setup() {
         Serial.println("Could not find a valid BME280 sensor, check wiring!");
     }
 
+    // DHT11
+    dht.begin();
+
     pinMode(LED, OUTPUT);
     digitalWrite(LED, LOW);
+
+    pinMode(D0, OUTPUT);
+    pinMode(D4, OUTPUT);
 
     pinMode(BUTTON, INPUT);
 
@@ -200,7 +212,17 @@ long timeButtonPress = 0;
 float tempC = 0;
 long tempTime = 0;
 
+int cc = 0;
+
 void loop() {
+    if (cc++ % 2 == 0) {
+        digitalWrite(D0, HIGH);
+        digitalWrite(D4, HIGH);
+    } else {
+        // digitalWrite(D0, LOW);
+        // digitalWrite(D4, LOW);
+    }
+
     otaUpdate.handle();
 
     display.clear();
@@ -243,8 +265,13 @@ void loop() {
     Serial.print(bme.readHumidity());
     Serial.println(" %");
 
-    Serial.println();
     // BME 280 end
+
+    // DHT11 BEGIN
+    float humidity = dht.readHumidity();
+    Serial.print("DHT11 hum: ");
+    Serial.println(humidity);
+    // DHT11 END
 
     delay(1000);
     int buttonState = digitalRead(BUTTON);
