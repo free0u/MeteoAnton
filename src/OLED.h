@@ -18,12 +18,12 @@ class OLED {
         display->setContrast(255);
         display->setFont(ArialMT_Plain_10);
     }
-    void displayIp(int cnt) {
+    void displayIp(int cnt, String time) {
         display->clear();
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
         display->drawString(display->getWidth() / 2, display->getHeight() / 2,
-                            "IP:\n" + WiFi.localIP().toString() + "\n# " + String(cnt));
+                            "IP:\n" + WiFi.localIP().toString() + "\n# " + String(cnt) + "\n" + time);
         display->display();
     }
     void displaySensorsData(SensorsData data) {

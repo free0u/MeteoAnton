@@ -1,6 +1,7 @@
 #include "FS.h"
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
+#include <NtpClientLib.h>
 
 OTAUpdate otaUpdate;
 
@@ -26,10 +27,12 @@ OLED *oled;
 #include "SensorsData.h"
 
 void switchLed(bool);
-
+long startTime;
 void setup() {
     pinMode(LED, OUTPUT);
     switchLed(true);
+
+    startTime = now();
 
     Serial.begin(115200);
     Serial.println("Booting and setup");
@@ -56,6 +59,10 @@ void setup() {
 
     // DHT11
     dht = new DHTSensor();
+
+    // NTP
+    NTP.begin("pool.ntp.org", 5);
+    NTP.setInterval(63);
 
     pinMode(D0, OUTPUT);
     pinMode(D4, OUTPUT);
@@ -255,7 +262,7 @@ void loop() {
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
-        oled->displayIp(cnt++);
+        oled->displayIp(cnt++, NTP.getTimeStr());
     }
     // oled->displayIp(counter);
 
@@ -275,6 +282,22 @@ void loop() {
     Serial.print("DHT11 hum: ");
     Serial.println(dhtHum);
     // DHT11 END
+    Serial.println("Start time: " + String(startTime) + "now(): " + String(now()));
+    // Serial.println("");
+    // Serial.println("");
+    // Serial.print(" ");
+    // Serial.print(NTP.getTimeDateString());
+    // Serial.print(" ");
+    // Serial.print(NTP.isSummerTime() ? "Summer Time. " : "Winter Time. ");
+    // Serial.print("WiFi is ");
+    // Serial.print(WiFi.isConnected() ? "connected" : "not connected");
+    // Serial.print(". ");
+    // Serial.print("Uptime: ");
+    // Serial.print(NTP.getUptimeString());
+    // Serial.print(" since ");
+    // Serial.println(NTP.getTimeDateString(NTP.getFirstSync()).c_str());
+    // Serial.println("");
+    // Serial.println("");
 
     delay(1000);
     int buttonState = digitalRead(BUTTON);
