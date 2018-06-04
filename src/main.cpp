@@ -250,7 +250,7 @@ void loop() {
     Serial.print("Pressure = ");
 
     Serial.print(bme->pressure() / 100.0F);
-    Serial.println(" hPa");
+    Serial.println(" mmHg");
 
     Serial.print("BME Humidity = ");
     Serial.print(bme->humidity());

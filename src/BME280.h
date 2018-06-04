@@ -19,7 +19,7 @@ class BME280 {
     }
     float temperature() { return bme.readTemperature(); }
     float humidity() { return bme.readHumidity(); }
-    float pressure() { return bme.readPressure() / 100.0F; }
+    float pressure() { return bme.readPressure() * 0.75F; }
 };
 
 #endif
