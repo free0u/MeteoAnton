@@ -25,7 +25,12 @@ OLED *oled;
 
 #include "SensorsData.h"
 
+void switchLed(bool);
+
 void setup() {
+    pinMode(LED, OUTPUT);
+    switchLed(true);
+
     Serial.begin(115200);
     Serial.println("Booting and setup");
 
@@ -38,6 +43,7 @@ void setup() {
     WiFiConfig wifiConfig;
     wifiConfig.connectWiFi(false);
     // displayIp(display, cnt);
+    switchLed(false);
 
     // configure and start OTA update server
     otaUpdate.setup();
@@ -50,9 +56,6 @@ void setup() {
 
     // DHT11
     dht = new DHTSensor();
-
-    pinMode(LED, OUTPUT);
-    digitalWrite(LED, LOW);
 
     pinMode(D0, OUTPUT);
     pinMode(D4, OUTPUT);
@@ -163,11 +166,11 @@ long timeSinceLastModeSwitch = 0;
 
 bool ledOn = false;
 
-void switchLed() {
-    if (ledOn) {
+void switchLed(bool turnOn) {
+    if (!turnOn) {
         analogWrite(LED, 0);
     } else {
-        analogWrite(LED, counter % 100 * 10 / 3);
+        analogWrite(LED, counter % 100 * 10 / 2);
     }
     ledOn = !ledOn;
 }
@@ -206,6 +209,13 @@ float bmeTemp;
 float bmePressure;
 float bmeHum;
 
+int oledState = 0;
+int oledStateNum = 2;
+const int SENSORS = 0;
+const int NETWORK = 1;
+const int LOG = 2;
+const int EMPTY = 4;
+
 void loop() {
     if (cc++ % 2 == 0) {
         digitalWrite(D0, HIGH);
@@ -242,7 +252,11 @@ void loop() {
     // display.drawString(0, 0, String(tempC));
     // display.display();
 
-    oled->displaySensorsData(sensorsData);
+    if (oledState == SENSORS) {
+        oled->displaySensorsData(sensorsData);
+    } else if (oledState == NETWORK) {
+        oled->displayIp(cnt++);
+    }
     // oled->displayIp(counter);
 
     // BME 280 begin
@@ -266,14 +280,12 @@ void loop() {
     int buttonState = digitalRead(BUTTON);
     if (buttonState == HIGH) {
         Serial.println("Button on");
-        switchLed();
 
         if (millis() - timeButtonPress > 500) {
             timeButtonPress = millis();
-            // demoMode = (demoMode + 1) % demoLength;
+            oledState = (oledState + 1) % oledStateNum;
+            Serial.println("OLED state: " + String(oledState));
         }
-    } else {
-        // Serial.println("Button off");
     }
 
     // IF button LONG PRESS and UPTIME smaller 1 minute
