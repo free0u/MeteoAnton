@@ -52,13 +52,14 @@ float SensorDallasTemp::printTemperature() {
     sensors->requestTemperatures(); // Send the command to get temperatures
     for (int i = 0; i < numberOfDevices; i++) {
         if (sensors->getAddress(tempDeviceAddress, i)) {
-            Serial.print("Temperature for device: ");
-            printAddress(tempDeviceAddress);
-            Serial.println(":");
-
             float tempC = sensors->getTempC(tempDeviceAddress);
-            Serial.print("Temp C: ");
-            Serial.println(tempC);
+            Serial.print("DS18 Temp C: ");
+            Serial.print(tempC);
+
+            Serial.print(" for device: ");
+            printAddress(tempDeviceAddress);
+            Serial.println();
+
             return tempC;
         }
         // else ghost device! Check your power requirements and cabling
