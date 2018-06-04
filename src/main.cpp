@@ -23,6 +23,8 @@ BME280 *bme;
 DHTSensor *dht;
 OLED *oled;
 
+#include "SensorsData.h"
+
 void setup() {
     Serial.begin(115200);
     Serial.println("Booting and setup");
@@ -192,6 +194,18 @@ long tempTime = 0;
 
 int cc = 0;
 
+SensorsData sensorsData;
+
+bool font = true;
+
+long sensorsDataUpdated = 0;
+
+float dsTemp;
+float dhtHum;
+float bmeTemp;
+float bmePressure;
+float bmeHum;
+
 void loop() {
     if (cc++ % 2 == 0) {
         digitalWrite(D0, HIGH);
@@ -209,43 +223,43 @@ void loop() {
     // display.setTextAlignment(TEXT_ALIGN_RIGHT);
     // display.drawString(128, 0, String(millis() / 1000 / 5));
 
-    if (millis() - tempTime > 2000) {
-        tempTime = millis();
-        tempC = temp->printTemperature();
+    if (millis() - sensorsDataUpdated > 2000) {
+        sensorsDataUpdated = millis();
+
+        dsTemp = temp->printTemperature();
+        bmeTemp = bme->temperature();
+        bmePressure = bme->pressure();
+        bmeHum = bme->humidity();
+        dhtHum = dht->humidity();
+
+        sensorsData.dsTemp = dsTemp;
+        sensorsData.bmeHum = bmeHum;
+        sensorsData.bmePressure = bmePressure;
+        sensorsData.dhtHum = dhtHum;
     }
 
     // display.setTextAlignment(TEXT_ALIGN_LEFT);
     // display.drawString(0, 0, String(tempC));
     // display.display();
 
-    oled->displayIp(counter);
-
-    if (millis() - timeSinceLastModeSwitch > DEMO_DURATION) {
-        // demoMode = (demoMode + 1) % demoLength;
-        timeSinceLastModeSwitch = millis();
-    }
-    counter++;
+    oled->displaySensorsData(sensorsData);
+    // oled->displayIp(counter);
 
     // BME 280 begin
     Serial.print("Temperature = ");
-    Serial.print(bme->temperature());
+    Serial.print(bmeTemp);
     Serial.println(" *C");
-
     Serial.print("Pressure = ");
-
-    Serial.print(bme->pressure() / 100.0F);
+    Serial.print(bmePressure);
     Serial.println(" mmHg");
-
     Serial.print("BME Humidity = ");
-    Serial.print(bme->humidity());
+    Serial.print(bmeHum);
     Serial.println(" %");
-
     // BME 280 end
 
     // DHT11 BEGIN
-    float humidity = dht->humidity();
     Serial.print("DHT11 hum: ");
-    Serial.println(humidity);
+    Serial.println(dhtHum);
     // DHT11 END
 
     delay(1000);
