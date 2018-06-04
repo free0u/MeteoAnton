@@ -27,15 +27,11 @@ void displayIp(SSD1306 display, int cnt) {
 
 #include "SensorDallasTemp.h"
 #include "BME280.h"
+#include "DHTSensor.h"
 
 SensorDallasTemp *temp;
 BME280 *bme;
-
-// DHT11
-#include "DHT.h"
-#define DHTPIN D2     // what digital pin we're connected to
-#define DHTTYPE DHT11 // DHT 11
-DHT dht(DHTPIN, DHTTYPE);
+DHTSensor *dht;
 
 void setup() {
     Serial.begin(115200);
@@ -64,8 +60,7 @@ void setup() {
     bme = new BME280();
 
     // DHT11
-    dht.begin();
-    Serial.println("DHT11 begin");
+    dht = new DHTSensor();
 
     pinMode(LED, OUTPUT);
     digitalWrite(LED, LOW);
@@ -250,7 +245,7 @@ void loop() {
     Serial.print("Pressure = ");
 
     Serial.print(bme->pressure() / 100.0F);
-    Serial.println(" mmHg");
+    Serial.println(" hPa");
 
     Serial.print("BME Humidity = ");
     Serial.print(bme->humidity());
@@ -259,7 +254,7 @@ void loop() {
     // BME 280 end
 
     // DHT11 BEGIN
-    float humidity = dht.readHumidity();
+    float humidity = dht->humidity();
     Serial.print("DHT11 hum: ");
     Serial.println(humidity);
     // DHT11 END
