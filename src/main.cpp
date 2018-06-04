@@ -26,14 +26,10 @@ void displayIp(SSD1306 display, int cnt) {
 }
 
 #include "SensorDallasTemp.h"
+#include "BME280.h"
 
 SensorDallasTemp *temp;
-
-#include <Adafruit_BME280.h>
-#include <Adafruit_Sensor.h>
-
-#define SEALEVELPRESSURE_HPA (1013.25)
-Adafruit_BME280 bme; // I2C
+BME280 *bme;
 
 // DHT11
 #include "DHT.h"
@@ -65,11 +61,7 @@ void setup() {
     temp = new SensorDallasTemp();
 
     // BME280
-    Serial.println("BME280 begin");
-    if (!bme.begin(0x76)) {
-        Serial.println("Could not find a valid BME280 sensor, check wiring!");
-    }
-    Serial.println("BME280 end");
+    bme = new BME280();
 
     // DHT11
     dht.begin();
@@ -251,21 +243,17 @@ void loop() {
     counter++;
 
     // BME 280 begin
-    // Serial.print("Temperature = ");
-    // Serial.print(bme.readTemperature());
-    // Serial.println(" *C");
+    Serial.print("Temperature = ");
+    Serial.print(bme->temperature());
+    Serial.println(" *C");
 
-    // Serial.print("Pressure = ");
+    Serial.print("Pressure = ");
 
-    // Serial.print(bme.readPressure() / 100.0F);
-    // Serial.println(" hPa");
-
-    // Serial.print("Approx. Altitude = ");
-    // Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-    // Serial.println(" m");
+    Serial.print(bme->pressure() / 100.0F);
+    Serial.println(" hPa");
 
     Serial.print("BME Humidity = ");
-    Serial.print(bme.readHumidity());
+    Serial.print(bme->humidity());
     Serial.println(" %");
 
     // BME 280 end
