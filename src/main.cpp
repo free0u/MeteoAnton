@@ -93,19 +93,22 @@ long timeButtonPress = 0;
 
 SensorsData sensorsData;
 
-long sensorsDataUpdated = 0;
-long dhtSensorUpdated;
+#define SENSORS_TIMEOUT 30000
+#define DHT_TIMEOUT 10000
+
+long sensorsDataUpdated = -1e9;
+long dhtSensorUpdated = -1e9;
 void tryUpdateSensors() {
     float dsTemp;
     float dhtHum;
     float bmePressure;
     float bmeHum;
 
-    if (millis() - sensorsDataUpdated > 30000) {
+    if (millis() - sensorsDataUpdated > SENSORS_TIMEOUT) {
         sensorsDataUpdated = millis();
 
         meteoLog->add("Reading sensors...");
-        dsTemp = temp->printTemperature();
+        dsTemp = temp->temperatureOne();
         bmePressure = bme->pressure();
         bmeHum = bme->humidity();
 
@@ -127,7 +130,7 @@ void tryUpdateSensors() {
         }
     }
 
-    if (millis() - dhtSensorUpdated > 10000) {
+    if (millis() - dhtSensorUpdated > DHT_TIMEOUT) {
         dhtSensorUpdated = millis();
         dhtHum = dht->humidity();
         meteoLog->add("dhtHum " + String(dhtHum));
