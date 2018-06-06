@@ -9,10 +9,10 @@ class SensorsData {
     float bmePressure;
 
     SensorsData() {
-        dsTemp = 1;
-        dhtHum = 2;
-        bmeHum = 3;
-        bmePressure = 4;
+        dsTemp = NAN;
+        dhtHum = NAN;
+        bmeHum = NAN;
+        bmePressure = NAN;
     }
 };
 

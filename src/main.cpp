@@ -90,39 +90,56 @@ const int LOG = 2;
 const int EMPTY = 4;
 
 long timeButtonPress = 0;
-long sensorsDataUpdated = 0;
 
 SensorsData sensorsData;
-float dsTemp;
-float dhtHum;
-float bmeTemp;
-float bmePressure;
-float bmeHum;
+
+long sensorsDataUpdated = 0;
+long dhtSensorUpdated;
+void tryUpdateSensors() {
+    float dsTemp;
+    float dhtHum;
+    float bmePressure;
+    float bmeHum;
+
+    if (millis() - sensorsDataUpdated > 30000) {
+        sensorsDataUpdated = millis();
+
+        meteoLog->add("Reading sensors...");
+        dsTemp = temp->printTemperature();
+        bmePressure = bme->pressure();
+        bmeHum = bme->humidity();
+
+        meteoLog->add("dsTemp " + String(dsTemp));
+        meteoLog->add("bmePressure " + String(bmePressure));
+        meteoLog->add("bmeHum " + String(bmeHum));
+        meteoLog->add("Reading sensors... Done");
+
+        if (!isnan(dsTemp)) {
+            sensorsData.dsTemp = dsTemp;
+        }
+
+        if (!isnan(bmeHum)) {
+            sensorsData.bmeHum = bmeHum;
+        }
+
+        if (!isnan(bmePressure)) {
+            sensorsData.bmePressure = bmePressure;
+        }
+    }
+
+    if (millis() - dhtSensorUpdated > 10000) {
+        dhtSensorUpdated = millis();
+        dhtHum = dht->humidity();
+        meteoLog->add("dhtHum " + String(dhtHum));
+
+        if (!isnan(dhtHum)) {
+            sensorsData.dhtHum = dhtHum;
+        }
+    }
+}
 
 void loop() {
     otaUpdate.handle();
-
-    if (millis() - sensorsDataUpdated > 2000) {
-        sensorsDataUpdated = millis();
-
-        dsTemp = temp->printTemperature();
-        bmeTemp = bme->temperature();
-        bmePressure = bme->pressure();
-        bmeHum = bme->humidity();
-        dhtHum = dht->humidity();
-
-        meteoLog->add(String(bmeHum) + " %");
-        sensorsData.dsTemp = dsTemp;
-        sensorsData.bmeHum = bmeHum;
-        sensorsData.bmePressure = bmePressure;
-        sensorsData.dhtHum = dhtHum;
-    }
-
-    // display.setTextAlignment(TEXT_ALIGN_LEFT);
-    // display.drawString(0, 0, String(tempC));
-    // display.display();
-
-    meteoLog->add(String(cnt++));
 
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
@@ -132,46 +149,14 @@ void loop() {
         oled->log();
     }
 
-    // BME 280 begin
-    Serial.print("Temperature = ");
-    Serial.print(bmeTemp);
-    Serial.println(" *C");
-    Serial.print("Pressure = ");
-    Serial.print(bmePressure);
-    Serial.println(" mmHg");
-    Serial.print("BME Humidity = ");
-    Serial.print(bmeHum);
-    Serial.println(" %");
-    // BME 280 end
+    tryUpdateSensors();
 
-    // DHT11 BEGIN
-    Serial.print("DHT11 hum: ");
-    Serial.println(dhtHum);
-    // DHT11 END
-
-    Serial.println("Start time: " + String(bootTime) + " now(): " + String(now()));
-    // Serial.println("");
-    // Serial.println("");
-    // Serial.print(" ");
-    // Serial.print(NTP.getTimeDateString());
-    // Serial.print(" ");
-    // Serial.print(NTP.isSummerTime() ? "Summer Time. " : "Winter Time. ");
-    // Serial.print("WiFi is ");
-    // Serial.print(WiFi.isConnected() ? "connected" : "not connected");
-    // Serial.print(". ");
-    // Serial.print("Uptime: ");
-    // Serial.print(NTP.getUptimeString());
-    // Serial.print(" since ");
-    // Serial.println(NTP.getTimeDateString(NTP.getFirstSync()).c_str());
-    // Serial.println("");
-    // Serial.println("");
-
-    delay(1000);
+    delay(100);
     int buttonState = digitalRead(BUTTON);
     if (buttonState == HIGH) {
-        Serial.println("Button on");
-
         if (millis() - timeButtonPress > 500) {
+            Serial.println("Button on");
+
             timeButtonPress = millis();
             oledState = (oledState + 1) % oledStateNum;
             Serial.println("OLED state: " + String(oledState));
