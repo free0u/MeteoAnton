@@ -5,13 +5,16 @@
 #include "images.h"
 #include "SensorsData.h"
 #include "fonts.h"
+#include "MeteoLog.h"
 
 class OLED {
   private:
     SSD1306 *display;
+    MeteoLog *meteoLog;
 
   public:
-    OLED() {
+    OLED(MeteoLog *meteoLog) {
+        this->meteoLog = meteoLog;
         display = new SSD1306(0x3C, D3, D5);
         display->init();
         display->flipScreenVertically();
@@ -35,6 +38,20 @@ class OLED {
         display->drawString(0, 16, "dht hum " + String(data.dhtHum) + " %");
         display->drawString(0, 32, "bme hum " + String(data.bmeHum) + " %");
         display->drawString(0, 48, "pressure " + String(data.bmePressure) + " mmHg");
+
+        display->display();
+    }
+    void log() {
+        display->clear();
+
+        display->setTextAlignment(TEXT_ALIGN_LEFT);
+        display->setFont(ArialMT_Plain_10);
+
+        int messageCount = meteoLog->getCount();
+
+        for (size_t i = 0; i < messageCount; i++) {
+            display->drawString(0, i * 10, "* " + meteoLog->get(i));
+        }
 
         display->display();
     }

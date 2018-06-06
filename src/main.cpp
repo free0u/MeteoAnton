@@ -18,17 +18,21 @@ int cnt = 1;
 #include "BME280.h"
 #include "DHTSensor.h"
 #include "OLED.h"
+#include "MeteoLog.h"
 
 SensorDallasTemp *temp;
 BME280 *bme;
 DHTSensor *dht;
 OLED *oled;
+MeteoLog *meteoLog;
 
 #include "SensorsData.h"
 
 void switchLed(bool);
 long startTime;
 void setup() {
+    meteoLog = new MeteoLog();
+
     pinMode(LED, OUTPUT);
     switchLed(true);
 
@@ -38,7 +42,7 @@ void setup() {
     Serial.println("Booting and setup");
 
     // setup OLED
-    oled = new OLED();
+    oled = new OLED(meteoLog);
 
     // setup wifi connection
     // if cant connect to wifi, configurator will be started
@@ -216,7 +220,7 @@ float bmeTemp;
 float bmePressure;
 float bmeHum;
 
-int oledState = 0;
+int oledState = 2;
 int oledStateNum = 2;
 const int SENSORS = 0;
 const int NETWORK = 1;
@@ -259,12 +263,15 @@ void loop() {
     // display.drawString(0, 0, String(tempC));
     // display.display();
 
+    meteoLog->add(String(cnt++));
+
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
         oled->displayIp(cnt++, NTP.getTimeStr());
+    } else if (oledState == LOG) {
+        oled->log();
     }
-    // oled->displayIp(counter);
 
     // BME 280 begin
     Serial.print("Temperature = ");
