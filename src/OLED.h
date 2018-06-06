@@ -11,6 +11,7 @@ class OLED {
   private:
     SSD1306 *display;
     MeteoLog *meteoLog;
+    bool printToSerial = true;
 
   public:
     OLED(MeteoLog *meteoLog) {
@@ -54,6 +55,14 @@ class OLED {
         }
 
         display->display();
+    }
+    void setPrintToSerial(bool f) { printToSerial = f; }
+    void showMessage(String message) {
+        meteoLog->add(message);
+        if (printToSerial) {
+            Serial.println("* " + message);
+        }
+        log();
     }
 };
 

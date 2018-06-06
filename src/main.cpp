@@ -31,47 +31,61 @@ MeteoLog *meteoLog;
 void switchLed(bool);
 long startTime;
 void setup() {
-    meteoLog = new MeteoLog();
+    Serial.begin(115200);
 
+    // setup pins
+    pinMode(D0, OUTPUT);
+    pinMode(D4, OUTPUT);
+    pinMode(BUTTON, INPUT);
     pinMode(LED, OUTPUT);
+
+    // setup log and OLED
+    meteoLog = new MeteoLog();
+    oled = new OLED(meteoLog);
+    oled->showMessage("Booting...");
+
+    // turn on LED until connected
+
     switchLed(true);
 
     startTime = now();
 
-    Serial.begin(115200);
-    Serial.println("Booting and setup");
-
-    // setup OLED
-    oled = new OLED(meteoLog);
-
     // setup wifi connection
     // if cant connect to wifi, configurator will be started
     // @todo: start configurator by pressing button, elsewhere just stay disconnected
+    oled->showMessage("Trying to connect WiFi");
     WiFiConfig wifiConfig;
     wifiConfig.connectWiFi(false);
     // displayIp(display, cnt);
+
     switchLed(false);
+    oled->showMessage("WiFi connected");
 
     // configure and start OTA update server
+    oled->showMessage("OTA server init...");
     otaUpdate.setup();
+    oled->showMessage("OTA server init... Done");
 
     // DS18B20 temperature
+    oled->showMessage("DS18B20 init...");
     temp = new SensorDallasTemp();
+    oled->showMessage("DS18B20 init... Done");
 
     // BME280
+    oled->showMessage("BME280 init...");
     bme = new BME280();
+    oled->showMessage("BME280 init... Done");
 
     // DHT11
+    oled->showMessage("DHT11 init...");
     dht = new DHTSensor();
+    oled->showMessage("DHT11 init... Done");
 
     // NTP
+    oled->showMessage("NTP init...");
     NTP.begin("pool.ntp.org", 5);
     NTP.setInterval(63);
-
-    pinMode(D0, OUTPUT);
-    pinMode(D4, OUTPUT);
-
-    pinMode(BUTTON, INPUT);
+    oled->showMessage("NTP init... Done");
 
     // Serial.print("SPIFFS: ");
     // Serial.println(SPIFFS.begin());
@@ -221,7 +235,7 @@ float bmePressure;
 float bmeHum;
 
 int oledState = 2;
-int oledStateNum = 2;
+int oledStateNum = 3;
 const int SENSORS = 0;
 const int NETWORK = 1;
 const int LOG = 2;
@@ -253,6 +267,7 @@ void loop() {
         bmeHum = bme->humidity();
         dhtHum = dht->humidity();
 
+        meteoLog->add(String(bmeHum) + " %");
         sensorsData.dsTemp = dsTemp;
         sensorsData.bmeHum = bmeHum;
         sensorsData.bmePressure = bmePressure;
