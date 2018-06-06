@@ -5,50 +5,39 @@
 
 OTAUpdate otaUpdate;
 
-#define DEMO_DURATION 3000
-typedef void (*Demo)(void);
-int demoMode = 0;
-int counter = 1;
-
-#define LED D8
 #define BUTTON D7
-int cnt = 1;
+int cnt = 0;
 
 #include "SensorDallasTemp.h"
 #include "BME280.h"
 #include "DHTSensor.h"
 #include "OLED.h"
 #include "MeteoLog.h"
+#include "SensorsData.h"
+#include "Led.h"
 
 SensorDallasTemp *temp;
 BME280 *bme;
 DHTSensor *dht;
 OLED *oled;
 MeteoLog *meteoLog;
+Led led;
+long bootTime;
 
-#include "SensorsData.h"
-
-void switchLed(bool);
-long startTime;
 void setup() {
     Serial.begin(115200);
+    bootTime = now();
 
     // setup pins
-    pinMode(D0, OUTPUT);
-    pinMode(D4, OUTPUT);
     pinMode(BUTTON, INPUT);
-    pinMode(LED, OUTPUT);
+
+    // turn on LED until connected
+    led.on();
 
     // setup log and OLED
     meteoLog = new MeteoLog();
     oled = new OLED(meteoLog);
     oled->showMessage("Booting...");
-
-    // turn on LED until connected
-
-    switchLed(true);
-
-    startTime = now();
 
     // setup wifi connection
     // if cant connect to wifi, configurator will be started
@@ -56,9 +45,7 @@ void setup() {
     oled->showMessage("Trying to connect WiFi");
     WiFiConfig wifiConfig;
     wifiConfig.connectWiFi(false);
-    // displayIp(display, cnt);
-
-    switchLed(false);
+    led.off();
     oled->showMessage("WiFi connected");
 
     // configure and start OTA update server
@@ -95,53 +82,6 @@ void setup() {
     // Serial.println(fs_info.usedBytes);
 }
 
-void setBrightnessLed(int);
-
-bool ledOn = false;
-
-void switchLed(bool turnOn) {
-    if (!turnOn) {
-        analogWrite(LED, 0);
-    } else {
-        analogWrite(LED, counter % 100 * 10 / 2);
-    }
-    ledOn = !ledOn;
-}
-
-void setBrightnessLed(int brightness) {
-    // analogWrite(LED, brightness);
-    analogWrite(LED, 10);
-    //
-}
-
-void dimLed() {
-    int newDim = cnt * 100 % 1024;
-    analogWrite(LED, newDim);
-    cnt++;
-}
-
-// ENUM
-// LED state: OFF, SENSORS, NETWORK
-
-long timeButtonPress = 0;
-
-float tempC = 0;
-long tempTime = 0;
-
-int cc = 0;
-
-SensorsData sensorsData;
-
-bool font = true;
-
-long sensorsDataUpdated = 0;
-
-float dsTemp;
-float dhtHum;
-float bmeTemp;
-float bmePressure;
-float bmeHum;
-
 int oledState = 2;
 int oledStateNum = 3;
 const int SENSORS = 0;
@@ -149,22 +89,18 @@ const int NETWORK = 1;
 const int LOG = 2;
 const int EMPTY = 4;
 
+long timeButtonPress = 0;
+long sensorsDataUpdated = 0;
+
+SensorsData sensorsData;
+float dsTemp;
+float dhtHum;
+float bmeTemp;
+float bmePressure;
+float bmeHum;
+
 void loop() {
-    if (cc++ % 2 == 0) {
-        digitalWrite(D0, HIGH);
-        digitalWrite(D4, HIGH);
-    } else {
-        // digitalWrite(D0, LOW);
-        // digitalWrite(D4, LOW);
-    }
-
     otaUpdate.handle();
-
-    // display.clear();
-    // // demos[demoMode]();
-    // demos[5]();
-    // display.setTextAlignment(TEXT_ALIGN_RIGHT);
-    // display.drawString(128, 0, String(millis() / 1000 / 5));
 
     if (millis() - sensorsDataUpdated > 2000) {
         sensorsDataUpdated = millis();
@@ -212,7 +148,8 @@ void loop() {
     Serial.print("DHT11 hum: ");
     Serial.println(dhtHum);
     // DHT11 END
-    Serial.println("Start time: " + String(startTime) + "now(): " + String(now()));
+
+    Serial.println("Start time: " + String(bootTime) + " now(): " + String(now()));
     // Serial.println("");
     // Serial.println("");
     // Serial.print(" ");

@@ -50,7 +50,7 @@ class OLED {
 
         int messageCount = meteoLog->getCount();
 
-        for (size_t i = 0; i < messageCount; i++) {
+        for (int i = 0; i < messageCount; i++) {
             display->drawString(0, i * 10, "* " + meteoLog->get(i));
         }
 
