@@ -6,6 +6,7 @@ class MeteoLog {
     static const int NUM = 6;
     String messages[NUM];
     int firstMessageInd;
+    bool printToSerial = true;
 
   public:
     MeteoLog() {
@@ -15,6 +16,9 @@ class MeteoLog {
         }
     }
     void add(String message) {
+        if (printToSerial) {
+            Serial.println("* " + message);
+        }
         messages[firstMessageInd] = message;
         firstMessageInd++;
         firstMessageInd %= NUM;
@@ -24,6 +28,7 @@ class MeteoLog {
         return messages[ind];
     }
     int getCount() { return NUM; }
+    void setPrintToSerial(bool print) { printToSerial = print; }
 };
 
 #endif

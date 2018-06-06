@@ -146,7 +146,7 @@ void loop() {
     } else if (oledState == NETWORK) {
         oled->displayIp(cnt++, NTP.getTimeStr());
     } else if (oledState == LOG) {
-        oled->log();
+        oled->displayLog();
     }
 
     tryUpdateSensors();
