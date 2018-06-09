@@ -34,7 +34,7 @@ class OLED {
 
         display->setTextAlignment(TEXT_ALIGN_LEFT);
         display->setFont(Monospaced_plain_12);
-        display->drawString(0, 0, "dsTemp " + String(data.dsTemp) + " °C");
+        display->drawString(0, 0, "ds " + String(data.dsTempOne) + " °C " + String(data.dsTempTwo));
         display->drawString(0, 16, "dht hum " + String(data.dhtHum) + " %");
         display->drawString(0, 32, "bme hum " + String(data.bmeHum) + " %");
         display->drawString(0, 48, "pressure " + String(data.bmePressure) + " mmHg");

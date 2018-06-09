@@ -25,6 +25,12 @@ class SensorDallasTemp {
     float tempIsCorrect(float temp) { return -100 < temp && temp < 100; }
 
     float temperatureByAddr(DeviceAddress deviceAddress) {
+        sensors->setWaitForConversion(false);
+        sensors->requestTemperatures(); // Send the command to get temperatures
+        pinMode(ONE_WIRE_BUS, OUTPUT);
+        digitalWrite(ONE_WIRE_BUS, HIGH);
+        delay(750);
+
         float tempC = sensors->getTempC(deviceAddress);
         if (!tempIsCorrect(tempC)) {
             Serial.print("Cant get temp for device ");
@@ -44,7 +50,6 @@ class SensorDallasTemp {
         Serial.println("Dallas Temperature IC Control Library Demo");
         sensors->begin();
         numberOfDevices = sensors->getDeviceCount();
-        numberOfDevices = 1;
 
         Serial.print("Locating devices...");
 
@@ -74,16 +79,20 @@ class SensorDallasTemp {
     }
 
     // first 28 61 64 11 8D 96 46 D3
-    // second
+    // second 28 61 64 11 BD D8 52 B6
     DeviceAddress addrOne = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x46, 0xD3};
-    DeviceAddress addrTwo = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x41, 0xD3};
+    DeviceAddress addrTwo = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
 
     float temperatureOne() { return temperatureByAddr(addrOne); }
 
     float temperatureTwo() { return temperatureByAddr(addrTwo); }
 
     float printTemperature2() {
+        sensors->setWaitForConversion(false);
         sensors->requestTemperatures(); // Send the command to get temperatures
+        pinMode(ONE_WIRE_BUS, OUTPUT);
+        digitalWrite(ONE_WIRE_BUS, HIGH);
+        delay(750);
         for (int i = 0; i < numberOfDevices; i++) {
             if (sensors->getAddress(tempDeviceAddress, i)) {
                 float tempC = sensors->getTempC(tempDeviceAddress);

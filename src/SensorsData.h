@@ -3,13 +3,15 @@
 
 class SensorsData {
   public:
-    float dsTemp;
+    float dsTempOne;
+    float dsTempTwo;
     float dhtHum;
     float bmeHum;
     float bmePressure;
 
     SensorsData() {
-        dsTemp = NAN;
+        dsTempOne = NAN;
+        dsTempTwo = NAN;
         dhtHum = NAN;
         bmeHum = NAN;
         bmePressure = NAN;

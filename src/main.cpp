@@ -99,7 +99,8 @@ SensorsData sensorsData;
 long sensorsDataUpdated = -1e9;
 long dhtSensorUpdated = -1e9;
 void tryUpdateSensors() {
-    float dsTemp;
+    float dsTempOne;
+    float dsTempTwo;
     float dhtHum;
     float bmePressure;
     float bmeHum;
@@ -108,17 +109,23 @@ void tryUpdateSensors() {
         sensorsDataUpdated = millis();
 
         meteoLog->add("Reading sensors...");
-        dsTemp = temp->temperatureOne();
+        dsTempOne = temp->temperatureOne();
+        dsTempTwo = temp->temperatureTwo();
         bmePressure = bme->pressure();
         bmeHum = bme->humidity();
 
-        meteoLog->add("dsTemp " + String(dsTemp));
+        meteoLog->add("dsTempOne " + String(dsTempOne));
+        meteoLog->add("dsTempTwo " + String(dsTempTwo));
         meteoLog->add("bmePressure " + String(bmePressure));
         meteoLog->add("bmeHum " + String(bmeHum));
         meteoLog->add("Reading sensors... Done");
 
-        if (!isnan(dsTemp)) {
-            sensorsData.dsTemp = dsTemp;
+        if (!isnan(dsTempOne)) {
+            sensorsData.dsTempOne = dsTempOne;
+        }
+
+        if (!isnan(dsTempTwo)) {
+            sensorsData.dsTempTwo = dsTempTwo;
         }
 
         if (!isnan(bmeHum)) {
