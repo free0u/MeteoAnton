@@ -2,6 +2,9 @@
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
 #include <NtpClientLib.h>
+#include <Wire.h>
+#include <RtcDS3231.h>
+RtcDS3231<TwoWire> Rtc(Wire);
 
 OTAUpdate otaUpdate;
 
@@ -24,9 +27,61 @@ MeteoLog *meteoLog;
 Led led;
 long bootTime;
 
+void scan() {
+    byte error, address;
+    int nDevices;
+
+    Serial.println("Scanning...");
+
+    nDevices = 0;
+    for (address = 1; address < 127; address++) {
+        Wire.beginTransmission(address);
+        error = Wire.endTransmission();
+
+        if (error == 0) {
+            Serial.print("I2C device found at address 0x");
+            if (address < 16)
+                Serial.print("0");
+            Serial.print(address, HEX);
+            Serial.println("  !");
+
+            nDevices++;
+        } else if (error == 4) {
+            Serial.print("Unknow error at address 0x");
+            if (address < 16)
+                Serial.print("0");
+            Serial.println(address, HEX);
+        }
+    }
+    if (nDevices == 0)
+        Serial.println("No I2C devices found\n");
+    else
+        Serial.println("done\n");
+
+    // delay(5000); // wait 5 seconds for next scan
+}
+
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+void printDateTime(const RtcDateTime &dt) {
+    char datestring[20];
+
+    snprintf_P(datestring, countof(datestring), PSTR("%02u/%02u/%04u %02u:%02u:%02u"), dt.Month(), dt.Day(), dt.Year(),
+               dt.Hour(), dt.Minute(), dt.Second());
+    Serial.print(datestring);
+}
+
+String rtcToString(const RtcDateTime &dt) {
+    char datestring[20];
+
+    snprintf_P(datestring, countof(datestring), PSTR("%02u:%02u:%02u"), dt.Hour(), dt.Minute(), dt.Second());
+    return String(datestring);
+}
+
 void setup() {
     Serial.begin(115200);
     bootTime = now();
+
+    Wire.begin();
 
     // setup pins
     pinMode(BUTTON, INPUT);
@@ -80,6 +135,38 @@ void setup() {
     // SPIFFS.info(fs_info);
     // Serial.println(fs_info.totalBytes);
     // Serial.println(fs_info.usedBytes);
+
+    Serial.print("compiled: ");
+    Serial.print(__DATE__);
+    Serial.println(__TIME__);
+    Rtc.Begin();
+    RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
+    printDateTime(compiled);
+    Serial.println();
+    if (!Rtc.IsDateTimeValid()) {
+        Serial.println("RTC lost confidence in the DateTime!");
+        // Rtc.SetDateTime(compiled);
+    }
+
+    if (!Rtc.GetIsRunning()) {
+        Serial.println("RTC was not actively running, starting now");
+        // Rtc.SetIsRunning(true);
+    }
+
+    RtcDateTime now = Rtc.GetDateTime();
+    if (now < compiled) {
+        Serial.println("RTC is older than compile time!  (Updating DateTime)");
+        // Rtc.SetDateTime(compiled);
+    } else if (now > compiled) {
+        Serial.println("RTC is newer than compile time. (this is expected)");
+    } else if (now == compiled) {
+        Serial.println("RTC is the same as compile time! (not expected but all is fine)");
+    }
+
+    // never assume the Rtc was last configured by you, so
+    // just clear them to your needed state
+    Rtc.Enable32kHzPin(false);
+    Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
 }
 
 int oledState = 2;
@@ -148,13 +235,40 @@ void tryUpdateSensors() {
     }
 }
 
+long timeScan = -1e9;
+long timeDelta = 1000000;
+
 void loop() {
     otaUpdate.handle();
+
+    if (millis() - timeScan > 2000) {
+        timeScan = millis();
+        // Serial.println("I2C begin");
+        // scan();
+        // Serial.println("I2C end");
+
+        long ts = now();
+        // RtcDateTime compiled;
+        // compiled.InitWithEpoch32Time(ts);
+        // Rtc.SetDateTime(compiled);
+
+        if (!Rtc.IsDateTimeValid()) {
+            Serial.println("RTC lost confidence in the DateTime!");
+        }
+
+        RtcDateTime nowt = Rtc.GetDateTime();
+        ts = now();
+        timeDelta = ts - nowt.Epoch32Time();
+        Serial.println("Timedelta: " + String(timeDelta));
+        printDateTime(nowt);
+        Serial.println();
+    }
 
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
-        oled->displayIp(cnt++, NTP.getTimeStr());
+        oled->displayIp(cnt++, timeDelta, rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
+        // oled->displayIp(cnt++, NTP.getTimeStr());
     } else if (oledState == LOG) {
         oled->displayLog();
     }

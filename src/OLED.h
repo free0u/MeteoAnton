@@ -18,15 +18,18 @@ class OLED {
         display = new SSD1306(0x3C, D3, D5);
         display->init();
         display->flipScreenVertically();
-        display->setContrast(255);
+        display->setContrast(1);
         display->setFont(ArialMT_Plain_10);
     }
-    void displayIp(int cnt, String time) {
+    void displayIp(int cnt, int value, String rtc, String ntp) {
         display->clear();
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+        int contrast = cnt % 5;
         display->drawString(display->getWidth() / 2, display->getHeight() / 2,
-                            "IP:\n" + WiFi.localIP().toString() + "\n# " + String(cnt) + "\n" + time);
+                            "IP:\n" + WiFi.localIP().toString() + "\nvalue: " + String(value) + "\n ntp " + ntp +
+                                "\n rtc " + rtc);
+        // display->setContrast(contrast);
         display->display();
     }
     void displaySensorsData(SensorsData data) {
