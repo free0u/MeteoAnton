@@ -7,6 +7,8 @@
 #include "fonts.h"
 #include "MeteoLog.h"
 
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+
 class OLED {
   private:
     SSD1306 *display;
@@ -32,11 +34,37 @@ class OLED {
         // display->setContrast(contrast);
         display->display();
     }
-    void displaySensorsData(SensorsData data) {
+
+    const int LEN = 18;
+    long ts = -1000000;
+
+    String firstInString(const SensorsData &data) {
+        String res = "in    ";
+        float t = data.dsTempOne;
+        if (abs(t) < 1e-3) {
+            res += " ";
+        } else if (t > 0) {
+            res += "+";
+        }
+        char tempStr[5];
+        sprintf(tempStr, "%.1f", t);
+        res += tempStr;
+        res += "°";
+
+        if (millis() - ts > 2000) {
+            ts = millis();
+            Serial.println("#1 " + res);
+        }
+
+        return res;
+    }
+
+    void displaySensorsData(const SensorsData &data) {
         display->clear();
 
         display->setTextAlignment(TEXT_ALIGN_LEFT);
         display->setFont(Monospaced_plain_12);
+        // firstInString(data);
         display->drawString(0, 0, "ds " + String(data.dsTempOne) + " °C " + String(data.dsTempTwo));
         display->drawString(0, 16, "dht hum " + String(data.dhtHum) + " %");
         display->drawString(0, 32, "bme hum " + String(data.bmeHum) + " %");

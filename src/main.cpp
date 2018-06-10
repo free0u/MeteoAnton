@@ -77,6 +77,13 @@ String rtcToString(const RtcDateTime &dt) {
     return String(datestring);
 }
 
+int oledState = 2;
+int oledStateNum = 3;
+const int SENSORS = 0;
+const int NETWORK = 1;
+const int LOG = 2;
+const int EMPTY = 4;
+
 void setup() {
     Serial.begin(115200);
     bootTime = now();
@@ -167,14 +174,8 @@ void setup() {
     // just clear them to your needed state
     Rtc.Enable32kHzPin(false);
     Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
+    oledState = SENSORS;
 }
-
-int oledState = 2;
-int oledStateNum = 3;
-const int SENSORS = 0;
-const int NETWORK = 1;
-const int LOG = 2;
-const int EMPTY = 4;
 
 long timeButtonPress = 0;
 
