@@ -2,8 +2,8 @@
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
 #include <NtpClientLib.h>
-#include <Wire.h>
 #include <RtcDS3231.h>
+#include <Wire.h>
 RtcDS3231<TwoWire> Rtc(Wire);
 
 OTAUpdate otaUpdate;
@@ -11,13 +11,13 @@ OTAUpdate otaUpdate;
 #define BUTTON D4
 int cnt = 0;
 
-#include "SensorDallasTemp.h"
 #include "BME280.h"
 #include "DHTSensor.h"
-#include "OLED.h"
-#include "MeteoLog.h"
-#include "SensorsData.h"
 #include "Led.h"
+#include "MeteoLog.h"
+#include "OLED.h"
+#include "SensorDallasTemp.h"
+#include "SensorsData.h"
 
 SensorDallasTemp *temp;
 BME280 *bme;
@@ -84,8 +84,14 @@ const int NETWORK = 1;
 const int LOG = 2;
 const int EMPTY = 4;
 
+#include <MHZ19_uart.h>
+const int rx_pin = D2; // Serial rx pin no
+const int tx_pin = D1; // Serial tx pin no
+MHZ19_uart mhz19;
+
 void setup() {
     Serial.begin(115200);
+
     bootTime = now();
 
     Wire.begin();
@@ -103,7 +109,8 @@ void setup() {
 
     // setup wifi connection
     // if cant connect to wifi, configurator will be started
-    // @todo: start configurator by pressing button, elsewhere just stay disconnected
+    // @todo: start configurator by pressing button, elsewhere just stay
+    // disconnected
     oled->showMessage("Trying to connect WiFi");
     WiFiConfig wifiConfig;
     wifiConfig.connectWiFi(false);
@@ -114,6 +121,12 @@ void setup() {
     oled->showMessage("OTA server init...");
     otaUpdate.setup();
     oled->showMessage("OTA server init... Done");
+
+    // CO2
+    oled->showMessage("CO2 init...");
+    mhz19.begin(rx_pin, tx_pin);
+    // mhz19.setAutoCalibration(false);
+    oled->showMessage("CO2 init... Done");
 
     // DS18B20 temperature
     oled->showMessage("DS18B20 init...");
@@ -239,7 +252,11 @@ void tryUpdateSensors() {
 long timeScan = -1e9;
 long timeDelta = 1000000;
 
+int cc = 0;
+
 void loop() {
+    // Serial.println("loop0 " + String(cc++));
+    // Serial1.println("loop1 " + String(cc++));
     otaUpdate.handle();
 
     if (millis() - timeScan > 2000) {
@@ -247,6 +264,17 @@ void loop() {
         // Serial.println("I2C begin");
         // scan();
         // Serial.println("I2C end");
+
+        // CO2
+        int co2ppm = mhz19.getPPM();
+        int co2status = mhz19.getStatus();
+
+        meteoLog->add("co2 ppm " + String(co2ppm));
+        meteoLog->add("co2 st " + String(co2status));
+        // Serial.print("co2: ");
+        // Serial.println(co2ppm);
+        // Serial.print("temp co2: ");
+        // Serial.println(temp);
 
         long ts = now();
         // RtcDateTime compiled;
@@ -260,9 +288,9 @@ void loop() {
         RtcDateTime nowt = Rtc.GetDateTime();
         ts = now();
         timeDelta = ts - nowt.Epoch32Time();
-        Serial.println("Timedelta: " + String(timeDelta));
-        printDateTime(nowt);
-        Serial.println();
+        // Serial.println("Timedelta: " + String(timeDelta));
+        // printDateTime(nowt);
+        // Serial.println();
     }
 
     if (oledState == SENSORS) {
