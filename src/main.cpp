@@ -8,7 +8,7 @@ RtcDS3231<TwoWire> Rtc(Wire);
 
 OTAUpdate otaUpdate;
 
-#define BUTTON D7
+#define BUTTON D4
 int cnt = 0;
 
 #include "SensorDallasTemp.h"

@@ -2,7 +2,7 @@
 #define DHTSensor_h
 
 #include "DHT.h"
-#define DHTPIN D2
+#define DHTPIN D6
 #define DHTTYPE DHT11
 
 class DHTSensor {

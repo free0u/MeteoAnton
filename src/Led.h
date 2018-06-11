@@ -1,7 +1,7 @@
 #ifndef LED_H
 #define LED_H
 
-#define LED D8
+#define LED D0
 
 class Led {
   private:
