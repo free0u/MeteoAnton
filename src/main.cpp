@@ -85,8 +85,8 @@ const int LOG = 2;
 const int EMPTY = 4;
 
 #include <MHZ19_uart.h>
-const int rx_pin = D2; // Serial rx pin no
-const int tx_pin = D1; // Serial tx pin no
+const int rx_pin = D1; // Serial rx pin no
+const int tx_pin = D2; // Serial tx pin no
 MHZ19_uart mhz19;
 
 void setup() {
