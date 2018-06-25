@@ -1,12 +1,9 @@
 #include "FS.h"
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
-#include <NtpClientLib.h>
-#include <RtcDS3231.h>
-#include <Wire.h>
+
 #include <ESP8266HTTPClient.h>
 #include "EspSaveCrash.h"
-RtcDS3231<TwoWire> Rtc(Wire);
 
 OTAUpdate otaUpdate;
 
@@ -22,6 +19,7 @@ int cnt = 0;
 #include "OLED.h"
 #include "SensorDallasTemp.h"
 #include "SensorsData.h"
+#include "Timing.h"
 
 SensorDallasTemp *temp;
 BME280 *bme;
@@ -29,6 +27,7 @@ DHTSensor *dht;
 OLED *oled;
 MeteoLog *meteoLog;
 Led led;
+Timing *timing;
 long bootTime;
 
 void scan() {
@@ -65,22 +64,6 @@ void scan() {
     // delay(5000); // wait 5 seconds for next scan
 }
 
-#define countof(a) (sizeof(a) / sizeof(a[0]))
-void printDateTime(const RtcDateTime &dt) {
-    char datestring[20];
-
-    snprintf_P(datestring, countof(datestring), PSTR("%02u/%02u/%04u %02u:%02u:%02u"), dt.Month(), dt.Day(), dt.Year(),
-               dt.Hour(), dt.Minute(), dt.Second());
-    Serial.print(datestring);
-}
-
-String rtcToString(const RtcDateTime &dt) {
-    char datestring[20];
-
-    snprintf_P(datestring, countof(datestring), PSTR("%02u:%02u:%02u"), dt.Hour(), dt.Minute(), dt.Second());
-    return String(datestring);
-}
-
 int oledState = 2;
 int oledStateNum = 3;
 const int SENSORS = 0;
@@ -92,53 +75,6 @@ const int EMPTY = 4;
 const int rx_pin = D1; // Serial rx pin no
 const int tx_pin = D2; // Serial tx pin no
 MHZ19_uart mhz19;
-// #include <SoftwareSerial.h>
-// SoftwareSerial swSer(tx_pin, rx_pin, false, 256); // GPIO15 (TX) and GPIO13 (RX)
-// #define DEBUG_SERIAL Serial
-// #define SENSOR_SERIAL swSer
-// byte cmd[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
-// unsigned char response[7];
-
-// float readCO2() {
-//     // CO2
-//     bool header_found{false};
-//     float res = -1;
-//     SENSOR_SERIAL.write(cmd, 9);
-//     memset(response, 0, 7);
-//     delay(100);
-
-//     // Looking for packet start
-//     while (SENSOR_SERIAL.available() && (!header_found)) {
-//         if (SENSOR_SERIAL.read() == 0xff) {
-//             if (SENSOR_SERIAL.read() == 0x86)
-//                 header_found = true;
-//         }
-//     }
-
-//     if (header_found) {
-//         SENSOR_SERIAL.readBytes(response, 7);
-
-//         byte crc = 0x86;
-//         for (char i = 0; i < 6; i++) {
-//             crc += response[i];
-//         }
-//         crc = 0xff - crc;
-//         crc++;
-
-//         if (!(response[6] == crc)) {
-//             DEBUG_SERIAL.println("CO2: CRC error: " + String(crc) + " / " + String(response[6]));
-//         } else {
-//             unsigned int responseHigh = (unsigned int)response[0];
-//             unsigned int responseLow = (unsigned int)response[1];
-//             unsigned int ppm = (256 * responseHigh) + responseLow;
-//             DEBUG_SERIAL.println("CO2:" + String(ppm));
-//             return ppm;
-//         }
-//     } else {
-//         DEBUG_SERIAL.println("CO2: Header not found");
-//     }
-//     return -1;
-// }
 
 int prevVal = LOW;
 long th, tl, h, l, ppm = 0;
@@ -166,7 +102,6 @@ void PWM_ISR() {
 
 void setup() {
     Serial.begin(115200);
-    // SENSOR_SERIAL.begin(9600);
 
     // SaveCrash.clear();
     SaveCrash.print();
@@ -228,11 +163,10 @@ void setup() {
     dht = new DHTSensor();
     oled->showMessage("DHT11 init... Done");
 
-    // NTP
-    oled->showMessage("NTP init...");
-    NTP.begin("pool.ntp.org", 5);
-    NTP.setInterval(63);
-    oled->showMessage("NTP init... Done");
+    // NTP and RTC
+    oled->showMessage("NTP/RTC init...");
+    timing = new Timing();
+    oled->showMessage("NTP/RTC init... Done");
 
     // Serial.print("SPIFFS: ");
     // Serial.println(SPIFFS.begin());
@@ -241,38 +175,6 @@ void setup() {
     // Serial.println(fs_info.totalBytes);
     // Serial.println(fs_info.usedBytes);
 
-    Serial.print("compiled: ");
-    Serial.print(__DATE__);
-    Serial.println(__TIME__);
-    Rtc.Begin();
-    RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
-    printDateTime(compiled);
-    Serial.println();
-    compiled.InitWithEpoch32Time(now());
-    if (!Rtc.IsDateTimeValid()) {
-        Serial.println("RTC lost confidence in the DateTime!");
-        // Rtc.SetDateTime(compiled);
-    }
-
-    if (!Rtc.GetIsRunning()) {
-        Serial.println("RTC was not actively running, starting now");
-        Rtc.SetIsRunning(true);
-    }
-
-    RtcDateTime now = Rtc.GetDateTime();
-    if (now < compiled) {
-        Serial.println("RTC is older than compile time!  (Updating DateTime)");
-        // Rtc.SetDateTime(compiled);
-    } else if (now > compiled) {
-        Serial.println("RTC is newer than compile time. (this is expected)");
-    } else if (now == compiled) {
-        Serial.println("RTC is the same as compile time! (not expected but all is fine)");
-    }
-
-    // never assume the Rtc was last configured by you, so
-    // just clear them to your needed state
-    Rtc.Enable32kHzPin(false);
-    Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
     oledState = SENSORS;
 }
 
@@ -350,33 +252,23 @@ long timeDataSend = -10000;
 
 int co2ppm;
 
-int calibrateCount = -1;
-
-long boot = millis();
-long min30 = 30 * 60 * 1000;
-long sec10 = 10 * 1000;
+#define RTC_TIME_UPDATE_TIMEOUT 3600000 // 1 hour
+// #define RTC_TIME_UPDATE_TIMEOUT 5000
+long rtcTimeUpdate = -RTC_TIME_UPDATE_TIMEOUT;
 
 void loop() {
     otaUpdate.handle();
     tryUpdateSensors();
 
-    if (calibrateCount == 0 && millis() - boot > min30) {
-        mhz19.calibrateZero();
-        calibrateCount++;
-    }
-    if (calibrateCount == 1 && millis() - boot > min30 + sec10) {
-        mhz19.calibrateZero();
-        calibrateCount++;
-    }
-    if (calibrateCount == 2 && millis() - boot > min30 + sec10 + sec10) {
-        mhz19.calibrateZero();
-        calibrateCount++;
+    if (millis() - rtcTimeUpdate > RTC_TIME_UPDATE_TIMEOUT) {
+        rtcTimeUpdate = millis();
+        timing->updateRtc();
+        meteoLog->add("RTC updated: " + timing->getRtcDateTime());
     }
 
     if (millis() - timeScan > 3000) {
         timeScan = millis();
         co2ppm = mhz19.getPPM();
-        // int co2ppm = -111;
         meteoLog->add("co2 ppm " + String(co2ppm) + "(" + String(ppm) + ")");
     }
 
@@ -398,7 +290,7 @@ void loop() {
         RtcDateTime compiled;
         compiled.InitWithEpoch32Time(millis() / 1000 - 6 * 60 * 60);
 
-        oled->displayIp(cnt++, NTP.getUptimeString(), rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
+        oled->displayIp(cnt++, NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr());
         // oled->displayIp(cnt++, rtcToString(compiled), rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
     } else if (oledState == LOG) {
         oled->displayLog();
