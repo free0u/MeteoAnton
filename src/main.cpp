@@ -296,8 +296,11 @@ void loop() {
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
-        oled->displayIp(cnt++, timeDelta, rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
-        // oled->displayIp(cnt++, NTP.getTimeStr());
+        RtcDateTime compiled;
+        compiled.InitWithEpoch32Time(millis() / 1000 - 6 * 60 * 60);
+
+        oled->displayIp(cnt++, NTP.getUptimeString(), rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
+        // oled->displayIp(cnt++, rtcToString(compiled), rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
     } else if (oledState == LOG) {
         oled->displayLog();
     }

@@ -28,9 +28,10 @@ class OLED {
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
         int contrast = cnt % 5;
+
         display->drawString(display->getWidth() / 2, display->getHeight() / 2,
-                            "IP:\n" + WiFi.localIP().toString() + "\nvalue: " + String(value) + "\n ntp " + ntp +
-                                "\n rtc " + rtc);
+                            "IP: " + WiFi.localIP().toString() + "\nup " + uptime + "\n ntp " + ntp + "\n rtc " +
+                                rtc);
         // display->setContrast(contrast);
         display->display();
     }
