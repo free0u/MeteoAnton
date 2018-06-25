@@ -8,6 +8,7 @@ class SensorsData {
     float dhtHum;
     float bmeHum;
     float bmePressure;
+    float co2;
 
     SensorsData() {
         dsTempOne = NAN;
@@ -15,6 +16,7 @@ class SensorsData {
         dhtHum = NAN;
         bmeHum = NAN;
         bmePressure = NAN;
+        co2 = NAN;
     }
 };
 

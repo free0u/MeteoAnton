@@ -23,7 +23,7 @@ class OLED {
         display->setContrast(1);
         display->setFont(ArialMT_Plain_10);
     }
-    void displayIp(int cnt, int value, String rtc, String ntp) {
+    void displayIp(int cnt, String uptime, String rtc, String ntp) {
         display->clear();
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
@@ -69,7 +69,8 @@ class OLED {
         display->drawString(0, 0, "ds " + String(data.dsTempOne) + " °C " + String(data.dsTempTwo));
         display->drawString(0, 16, "dht hum " + String(data.dhtHum) + " %");
         display->drawString(0, 32, "bme hum " + String(data.bmeHum) + " %");
-        display->drawString(0, 48, "pressure " + String(data.bmePressure) + " mmHg");
+        // display->drawString(0, 48, "pressure " + String(data.bmePressure) + " mmHg");
+        display->drawString(0, 48, "co2  " + String((int)data.co2) + " ppm");
 
         display->display();
     }

@@ -4,12 +4,16 @@
 #include <NtpClientLib.h>
 #include <RtcDS3231.h>
 #include <Wire.h>
+#include <ESP8266HTTPClient.h>
+#include "EspSaveCrash.h"
 RtcDS3231<TwoWire> Rtc(Wire);
 
 OTAUpdate otaUpdate;
 
 #define BUTTON D4
 int cnt = 0;
+
+#define PWM D8
 
 #include "BME280.h"
 #include "DHTSensor.h"
@@ -88,9 +92,89 @@ const int EMPTY = 4;
 const int rx_pin = D1; // Serial rx pin no
 const int tx_pin = D2; // Serial tx pin no
 MHZ19_uart mhz19;
+// #include <SoftwareSerial.h>
+// SoftwareSerial swSer(tx_pin, rx_pin, false, 256); // GPIO15 (TX) and GPIO13 (RX)
+// #define DEBUG_SERIAL Serial
+// #define SENSOR_SERIAL swSer
+// byte cmd[9] = {0xFF, 0x01, 0x86, 0x00, 0x00, 0x00, 0x00, 0x00, 0x79};
+// unsigned char response[7];
+
+// float readCO2() {
+//     // CO2
+//     bool header_found{false};
+//     float res = -1;
+//     SENSOR_SERIAL.write(cmd, 9);
+//     memset(response, 0, 7);
+//     delay(100);
+
+//     // Looking for packet start
+//     while (SENSOR_SERIAL.available() && (!header_found)) {
+//         if (SENSOR_SERIAL.read() == 0xff) {
+//             if (SENSOR_SERIAL.read() == 0x86)
+//                 header_found = true;
+//         }
+//     }
+
+//     if (header_found) {
+//         SENSOR_SERIAL.readBytes(response, 7);
+
+//         byte crc = 0x86;
+//         for (char i = 0; i < 6; i++) {
+//             crc += response[i];
+//         }
+//         crc = 0xff - crc;
+//         crc++;
+
+//         if (!(response[6] == crc)) {
+//             DEBUG_SERIAL.println("CO2: CRC error: " + String(crc) + " / " + String(response[6]));
+//         } else {
+//             unsigned int responseHigh = (unsigned int)response[0];
+//             unsigned int responseLow = (unsigned int)response[1];
+//             unsigned int ppm = (256 * responseHigh) + responseLow;
+//             DEBUG_SERIAL.println("CO2:" + String(ppm));
+//             return ppm;
+//         }
+//     } else {
+//         DEBUG_SERIAL.println("CO2: Header not found");
+//     }
+//     return -1;
+// }
+
+int prevVal = LOW;
+long th, tl, h, l, ppm = 0;
+long ppmUpdateTime = -1;
+void PWM_ISR() {
+    long tt = millis();
+    int val = digitalRead(PWM);
+
+    if (val == HIGH) {
+        if (val != prevVal) {
+            h = tt;
+            tl = h - l;
+            prevVal = val;
+        }
+    } else {
+        if (val != prevVal) {
+            l = tt;
+            th = l - h;
+            prevVal = val;
+            ppm = 5000 * (th - 2) / (th + tl - 4);
+            ppmUpdateTime = tt;
+        }
+    }
+}
 
 void setup() {
     Serial.begin(115200);
+    // SENSOR_SERIAL.begin(9600);
+
+    // SaveCrash.clear();
+    SaveCrash.print();
+
+    pinMode(PWM, INPUT);
+    attachInterrupt(digitalPinToInterrupt(PWM), PWM_ISR, CHANGE);
+    // pinMode(PWM, OUTPUT);
+    // digitalWrite(PWM, HIGH);
 
     bootTime = now();
 
@@ -125,6 +209,7 @@ void setup() {
     // CO2
     oled->showMessage("CO2 init...");
     mhz19.begin(rx_pin, tx_pin);
+    mhz19.setAutoCalibration(true);
     // mhz19.setAutoCalibration(false);
     oled->showMessage("CO2 init... Done");
 
@@ -163,6 +248,7 @@ void setup() {
     RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
     printDateTime(compiled);
     Serial.println();
+    compiled.InitWithEpoch32Time(now());
     if (!Rtc.IsDateTimeValid()) {
         Serial.println("RTC lost confidence in the DateTime!");
         // Rtc.SetDateTime(compiled);
@@ -170,7 +256,7 @@ void setup() {
 
     if (!Rtc.GetIsRunning()) {
         Serial.println("RTC was not actively running, starting now");
-        // Rtc.SetIsRunning(true);
+        Rtc.SetIsRunning(true);
     }
 
     RtcDateTime now = Rtc.GetDateTime();
@@ -194,7 +280,7 @@ long timeButtonPress = 0;
 
 SensorsData sensorsData;
 
-#define SENSORS_TIMEOUT 30000
+#define SENSORS_TIMEOUT 10000
 #define DHT_TIMEOUT 10000
 
 long sensorsDataUpdated = -1e9;
@@ -236,6 +322,12 @@ void tryUpdateSensors() {
         if (!isnan(bmePressure)) {
             sensorsData.bmePressure = bmePressure;
         }
+
+        if (millis() - ppmUpdateTime < 10000) {
+            sensorsData.co2 = ppm;
+        } else {
+            sensorsData.co2 = NAN;
+        }
     }
 
     if (millis() - dhtSensorUpdated > DHT_TIMEOUT) {
@@ -254,43 +346,50 @@ long timeDelta = 1000000;
 
 int cc = 0;
 
+long timeDataSend = -10000;
+
+int co2ppm;
+
+int calibrateCount = -1;
+
+long boot = millis();
+long min30 = 30 * 60 * 1000;
+long sec10 = 10 * 1000;
+
 void loop() {
-    // Serial.println("loop0 " + String(cc++));
-    // Serial1.println("loop1 " + String(cc++));
     otaUpdate.handle();
+    tryUpdateSensors();
 
-    if (millis() - timeScan > 2000) {
+    if (calibrateCount == 0 && millis() - boot > min30) {
+        mhz19.calibrateZero();
+        calibrateCount++;
+    }
+    if (calibrateCount == 1 && millis() - boot > min30 + sec10) {
+        mhz19.calibrateZero();
+        calibrateCount++;
+    }
+    if (calibrateCount == 2 && millis() - boot > min30 + sec10 + sec10) {
+        mhz19.calibrateZero();
+        calibrateCount++;
+    }
+
+    if (millis() - timeScan > 3000) {
         timeScan = millis();
-        // Serial.println("I2C begin");
-        // scan();
-        // Serial.println("I2C end");
+        co2ppm = mhz19.getPPM();
+        // int co2ppm = -111;
+        meteoLog->add("co2 ppm " + String(co2ppm) + "(" + String(ppm) + ")");
+    }
 
-        // CO2
-        int co2ppm = mhz19.getPPM();
-        int co2status = mhz19.getStatus();
+    if (millis() - timeDataSend > 16000) {
+        timeDataSend = millis();
+        int up = millis() / 1000;
+        String url = "***REMOVED***&field1=" + String(co2ppm) +
+                     "&field2=" + String(up / 60) + "&field3=" + String(ppm);
 
-        meteoLog->add("co2 ppm " + String(co2ppm));
-        meteoLog->add("co2 st " + String(co2status));
-        // Serial.print("co2: ");
-        // Serial.println(co2ppm);
-        // Serial.print("temp co2: ");
-        // Serial.println(temp);
-
-        long ts = now();
-        // RtcDateTime compiled;
-        // compiled.InitWithEpoch32Time(ts);
-        // Rtc.SetDateTime(compiled);
-
-        if (!Rtc.IsDateTimeValid()) {
-            Serial.println("RTC lost confidence in the DateTime!");
-        }
-
-        RtcDateTime nowt = Rtc.GetDateTime();
-        ts = now();
-        timeDelta = ts - nowt.Epoch32Time();
-        // Serial.println("Timedelta: " + String(timeDelta));
-        // printDateTime(nowt);
-        // Serial.println();
+        HTTPClient http;
+        http.begin(url);
+        int statusCode = http.GET();
+        meteoLog->add("http code " + String(statusCode));
     }
 
     if (oledState == SENSORS) {
@@ -305,17 +404,15 @@ void loop() {
         oled->displayLog();
     }
 
-    tryUpdateSensors();
-
     delay(100);
     int buttonState = digitalRead(BUTTON);
     if (buttonState == HIGH) {
         if (millis() - timeButtonPress > 500) {
-            Serial.println("Button on");
+            // Serial.println("Button on");
 
             timeButtonPress = millis();
             oledState = (oledState + 1) % oledStateNum;
-            Serial.println("OLED state: " + String(oledState));
+            // Serial.println("OLED state: " + String(oledState));
         }
     }
 

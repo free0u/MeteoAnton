@@ -21,8 +21,8 @@ MHZ19_uart::~MHZ19_uart() {}
 void MHZ19_uart::begin(int rx, int tx) {
     _rx_pin = rx;
     _tx_pin = tx;
-    hserial = new SoftwareSerial(_rx_pin, _tx_pin);
-    hserial->begin(9600);
+    // hserial = new SoftwareSerial(_rx_pin, _tx_pin);
+    // hserial->begin(9600);
 }
 
 void MHZ19_uart::setAutoCalibration(boolean autocalib) { writeCommand(autocalib ? autocalib_on : autocalib_off); }
@@ -54,24 +54,53 @@ boolean MHZ19_uart::isWarming() { return (getStatus() <= 1); }
 void MHZ19_uart::writeCommand(uint8_t cmd[]) { writeCommand(cmd, NULL); }
 
 void MHZ19_uart::writeCommand(uint8_t cmd[], uint8_t *response) {
+    SoftwareSerial *hserial;
+    hserial = new SoftwareSerial(_rx_pin, _tx_pin);
+    hserial->begin(9600);
 
-    hserial->write(cmd, REQUEST_CNT);
-    hserial->write(mhz19_checksum(cmd));
+    int nbBytesSent = hserial->write(cmd, REQUEST_CNT);
+    nbBytesSent += hserial->write(mhz19_checksum(cmd));
     hserial->flush();
+    if (nbBytesSent != 9) {
+        Serial.println("MHZ19: Error, nb bytes sent != 9 : " + String(nbBytesSent));
+    }
 
     if (response != NULL) {
-        int i = 0;
-        while (hserial->available() <= 0) {
-            if (++i > WAIT_READ_TIMES) {
-                Serial.println("error: can't get MH-Z19 response.");
-                return;
+        memset(response, 0, 9);
+        long start = millis();
+        int counter = 0;
+        while (((millis() - start) < 300) && (counter < 9)) {
+            if (hserial->available() > 0) {
+                int b = hserial->read();
+                response[counter++] = b;
+                // Serial.print(response[counter - 1]);
+                // Serial.print(" ");
+            } else {
+                yield();
+                delay(10);
             }
-            yield();
-            delay(WAIT_READ_DELAY);
         }
-        // Serial.println(String("debug:")+String(i));
-        hserial->readBytes(response, MHZ19_uart::RESPONSE_CNT);
+        // Serial.println("");
+
+        if (counter < 9) {
+            Serial.println("MHZ19: Error, timeout while trying to read, counter = " + String(counter));
+        }
     }
+
+    // if (response != NULL) {
+    //     int i = 0;
+    //     while (hserial->available() <= 0) {
+    //         if (++i > WAIT_READ_TIMES) {
+    //             Serial.println("error: can't get MH-Z19 response.");
+    //             return;
+    //         }
+    //         yield();
+    //         delay(WAIT_READ_DELAY);
+    //     }
+    //     Serial.println(String("debug:") + String(i));
+    //     hserial->readBytes(response, MHZ19_uart::RESPONSE_CNT);
+    // }
+    delete hserial;
 }
 
 // private
