@@ -1,13 +1,8 @@
 #include "FS.h"
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
-
 #include <ESP8266HTTPClient.h>
 #include "EspSaveCrash.h"
-
-OTAUpdate otaUpdate;
-
-#define BUTTON D4
 
 #include "BME280.h"
 #include "DHTSensor.h"
@@ -18,6 +13,12 @@ OTAUpdate otaUpdate;
 #include "SensorsData.h"
 #include "Timing.h"
 #include "CO2Sensor.h"
+#include "OLEDStates.h"
+#include "Timeouts.h"
+
+#define BUTTON D4
+
+OTAUpdate otaUpdate;
 
 WiFiConfig *wifiConfig;
 SensorDallasTemp *temp;
@@ -30,15 +31,7 @@ Timing *timing;
 CO2Sensor *co2;
 
 long bootTime;
-
-int oledState = 2;
-int oledStateNum = 6;
-const int SENSORS = 0;
-const int NETWORK = 1;
-const int LOG = 2;
-const int OLED_AUTO_OFF_SWITCH = 3;
-const int WIFI_CHANGE = 4;
-const int EMPTY = 5;
+SensorsData sensorsData;
 
 void setup() {
     Serial.begin(115200);
@@ -118,11 +111,6 @@ void setup() {
 
 long timeButtonPress = 0;
 
-SensorsData sensorsData;
-
-#define SENSORS_TIMEOUT 10000
-#define DHT_TIMEOUT 10000
-
 long sensorsDataUpdated = -1e9;
 long dhtSensorUpdated = -1e9;
 void tryUpdateSensors() {
@@ -191,8 +179,6 @@ long timeDataSend = -10000;
 
 int co2ppm;
 
-#define RTC_TIME_UPDATE_TIMEOUT 3600000 // 1 hour
-// #define RTC_TIME_UPDATE_TIMEOUT 5000
 long rtcTimeUpdate = -RTC_TIME_UPDATE_TIMEOUT;
 
 long oledStateChangedTime = 0;
