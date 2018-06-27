@@ -30,8 +30,8 @@ Led led;
 Timing *timing;
 CO2Sensor *co2;
 
-long bootTime;
 SensorsData sensorsData;
+long bootTime;
 
 void setup() {
     Serial.begin(115200);
@@ -109,19 +109,25 @@ void setup() {
     oledState = SENSORS;
 }
 
+// timers
 long timeButtonPress = 0;
-
+long timeScanCo2 = -1e9;
+long timeDataSend = -10000;
+long rtcTimeUpdate = -RTC_TIME_UPDATE_TIMEOUT;
+long oledStateChangedTime = 0;
 long sensorsDataUpdated = -1e9;
 long dhtSensorUpdated = -1e9;
+
 void tryUpdateSensors() {
     float dsTempOne;
     float dsTempTwo;
     float dhtHum;
     float bmePressure;
     float bmeHum;
+    long millisNow = millis();
 
-    if (millis() - sensorsDataUpdated > SENSORS_TIMEOUT) {
-        sensorsDataUpdated = millis();
+    if (millisNow - sensorsDataUpdated > SENSORS_TIMEOUT) {
+        sensorsDataUpdated = millisNow;
 
         meteoLog->add("Reading sensors...");
         dsTempOne = temp->temperatureOne();
@@ -136,26 +142,23 @@ void tryUpdateSensors() {
         meteoLog->add("Reading sensors... Done");
 
         if (!isnan(dsTempOne)) {
-            sensorsData.dsTempOne = dsTempOne;
+            sensorsData.dsTempOne.set(dsTempOne, millisNow);
         }
 
         if (!isnan(dsTempTwo)) {
-            sensorsData.dsTempTwo = dsTempTwo;
+            sensorsData.dsTempTwo.set(dsTempTwo, millisNow);
         }
 
         if (!isnan(bmeHum)) {
-            sensorsData.bmeHum = bmeHum;
+            sensorsData.bmeHum.set(bmeHum, millisNow);
         }
 
         if (!isnan(bmePressure)) {
-            sensorsData.bmePressure = bmePressure;
+            sensorsData.bmePressure.set(bmePressure, millisNow);
         }
 
-        if (millis() - co2->getPpmUpateTime() < 10000) {
-            sensorsData.co2 = co2->getPpmPwm();
-            ;
-        } else {
-            sensorsData.co2 = NAN;
+        if (millisNow - co2->getPpmUpateTime() < 10000) {
+            sensorsData.co2.set(co2->getPpmPwm(), millisNow);
         }
     }
 
@@ -165,23 +168,42 @@ void tryUpdateSensors() {
         meteoLog->add("dhtHum " + String(dhtHum));
 
         if (!isnan(dhtHum)) {
-            sensorsData.dhtHum = dhtHum;
+            sensorsData.dhtHum.set(dhtHum, millis());
         }
+    }
+
+    if (millis() - timeScanCo2 > CO2_TIMEOUT) {
+        timeScanCo2 = millis();
+        int co2uart = co2->getPpmUart();
+        if (co2uart != -1) {
+            sensorsData.co2uart.set(co2uart, timeScanCo2);
+        }
+
+        meteoLog->add("co2 ppm " + String(co2uart) + "(" + String(co2->getPpmPwm()) + ")");
     }
 }
 
-long timeScan = -1e9;
-long timeDelta = 1000000;
+String generateThingspeakPair(int ind, Sensor sensor) {
+    float value = sensor.getIfUpdated();
+    if (isnan(value)) {
+        return "";
+    }
+    return "&field" + String(ind) + "=" + String(value);
+}
 
-int cc = 0;
+String generateThingspeakPair(int ind, int value) { return "&field" + String(ind) + "=" + String(value); }
 
-long timeDataSend = -10000;
-
-int co2ppm;
-
-long rtcTimeUpdate = -RTC_TIME_UPDATE_TIMEOUT;
-
-long oledStateChangedTime = 0;
+int sendData() {
+    int up = millis() / 1000;
+    String url = "***REMOVED***" +
+                 generateThingspeakPair(1, sensorsData.co2uart) + generateThingspeakPair(2, up / 60) +
+                 generateThingspeakPair(3, sensorsData.co2) + generateThingspeakPair(4, sensorsData.dsTempOne) +
+                 generateThingspeakPair(5, sensorsData.bmeHum);
+    HTTPClient http;
+    http.begin(url);
+    int statusCode = http.GET();
+    return statusCode;
+}
 
 void loop() {
     otaUpdate.handle();
@@ -193,23 +215,9 @@ void loop() {
         meteoLog->add("RTC updated: " + timing->getRtcDateTime());
     }
 
-    if (millis() - timeScan > 3000) {
-        Serial.println("Always on: " + String(oled->alwaysOn));
-        timeScan = millis();
-        co2ppm = co2->getPpmUart();
-        meteoLog->add("co2 ppm " + String(co2ppm) + "(" + String(co2->getPpmPwm()) + ")");
-    }
-
     if (millis() - timeDataSend > 16000) {
         timeDataSend = millis();
-        int up = millis() / 1000;
-        String url = "***REMOVED***&field1=" + String(co2ppm) +
-                     "&field2=" + String(up / 60) + "&field3=" + String(co2->getPpmPwm()) +
-                     "&field4=" + String(sensorsData.dsTempOne) + "&field5=" + String(sensorsData.bmeHum);
-
-        HTTPClient http;
-        http.begin(url);
-        int statusCode = http.GET();
+        int statusCode = sendData();
         meteoLog->add("http code " + String(statusCode));
     }
 

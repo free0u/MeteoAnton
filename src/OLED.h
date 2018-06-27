@@ -48,9 +48,9 @@ class OLED {
     const int LEN = 18;
     long ts = -1000000;
 
-    String firstInString(const SensorsData &data) {
+    String firstInString(SensorsData &data) {
         String res = "in    ";
-        float t = data.dsTempOne;
+        float t = data.dsTempOne.getIfUpdated();
         if (abs(t) < 1e-3) {
             res += " ";
         } else if (t > 0) {
@@ -69,17 +69,18 @@ class OLED {
         return res;
     }
 
-    void displaySensorsData(const SensorsData &data) {
+    void displaySensorsData(SensorsData &data) {
         display->clear();
 
         display->setTextAlignment(TEXT_ALIGN_LEFT);
         display->setFont(Monospaced_plain_12);
         // firstInString(data);
-        display->drawString(0, 0, "ds " + String(data.dsTempOne) + " °C " + String(data.dsTempTwo));
-        display->drawString(0, 16, "dht hum " + String(data.dhtHum) + " %");
-        display->drawString(0, 32, "bme hum " + String(data.bmeHum) + " %");
-        // display->drawString(0, 48, "pressure " + String(data.bmePressure) + " mmHg");
-        display->drawString(0, 48, "co2  " + String((int)data.co2) + " ppm");
+        display->drawString(
+            0, 0, "ds " + String(data.dsTempOne.getIfUpdated()) + " °C " + String(data.dsTempTwo.getIfUpdated()));
+        display->drawString(0, 16, "dht hum " + String(data.dhtHum.getIfUpdated()) + " %");
+        display->drawString(0, 32, "bme hum " + String(data.bmeHum.getIfUpdated()) + " %");
+        // display->drawString(0, 48, "pressure " + String(data.bmePressure.getIfUpdated()) + " mmHg");
+        display->drawString(0, 48, "co2  " + String((int)data.co2.getIfUpdated()) + " ppm");
 
         display->display();
     }
