@@ -8,9 +8,6 @@
 OTAUpdate otaUpdate;
 
 #define BUTTON D4
-int cnt = 0;
-
-#define PWM D8
 
 #include "BME280.h"
 #include "DHTSensor.h"
@@ -20,6 +17,7 @@ int cnt = 0;
 #include "SensorDallasTemp.h"
 #include "SensorsData.h"
 #include "Timing.h"
+#include "CO2Sensor.h"
 
 WiFiConfig *wifiConfig;
 SensorDallasTemp *temp;
@@ -29,6 +27,8 @@ OLED *oled;
 MeteoLog *meteoLog;
 Led led;
 Timing *timing;
+CO2Sensor *co2;
+
 long bootTime;
 
 void scan() {
@@ -74,39 +74,6 @@ const int OLED_AUTO_OFF_SWITCH = 3;
 const int WIFI_CHANGE = 4;
 const int EMPTY = 5;
 
-#include <MHZ19_uart.h>
-const int rx_pin = D1; // Serial rx pin no
-const int tx_pin = D2; // Serial tx pin no
-MHZ19_uart mhz19;
-
-int prevVal = LOW;
-long th, tl, h, l, ppm = 0;
-long ppmUpdateTime = -1;
-void PWM_ISR() {
-    long tt = millis();
-    int val = digitalRead(PWM);
-
-    if (val == HIGH) {
-        if (val != prevVal) {
-            h = tt;
-            tl = h - l;
-            prevVal = val;
-        }
-    } else {
-        if (val != prevVal) {
-            l = tt;
-            th = l - h;
-            prevVal = val;
-            ppm = 5000 * (th - 2) / (th + tl - 4);
-            ppmUpdateTime = tt;
-        }
-    }
-}
-
-void attachCo2Interrupt() { attachInterrupt(digitalPinToInterrupt(PWM), PWM_ISR, CHANGE); }
-
-void detachCo2Interrupt() { detachInterrupt(PWM); }
-
 void setup() {
     Serial.begin(115200);
 
@@ -114,7 +81,7 @@ void setup() {
     SaveCrash.print();
 
     pinMode(PWM, INPUT);
-    attachCo2Interrupt();
+
     // pinMode(PWM, OUTPUT);
     // digitalWrite(PWM, HIGH);
 
@@ -150,9 +117,7 @@ void setup() {
 
     // CO2
     oled->showMessage("CO2 init...");
-    mhz19.begin(rx_pin, tx_pin);
-    mhz19.setAutoCalibration(true);
-    // mhz19.setAutoCalibration(false);
+    co2 = new CO2Sensor();
     oled->showMessage("CO2 init... Done");
 
     // DS18B20 temperature
@@ -232,8 +197,9 @@ void tryUpdateSensors() {
             sensorsData.bmePressure = bmePressure;
         }
 
-        if (millis() - ppmUpdateTime < 10000) {
-            sensorsData.co2 = ppm;
+        if (millis() - co2->getPpmUpateTime() < 10000) {
+            sensorsData.co2 = co2->getPpmPwm();
+            ;
         } else {
             sensorsData.co2 = NAN;
         }
@@ -278,15 +244,15 @@ void loop() {
     if (millis() - timeScan > 3000) {
         Serial.println("Always on: " + String(oled->alwaysOn));
         timeScan = millis();
-        co2ppm = mhz19.getPPM();
-        meteoLog->add("co2 ppm " + String(co2ppm) + "(" + String(ppm) + ")");
+        co2ppm = co2->getPpmUart();
+        meteoLog->add("co2 ppm " + String(co2ppm) + "(" + String(co2->getPpmPwm()) + ")");
     }
 
     if (millis() - timeDataSend > 16000) {
         timeDataSend = millis();
         int up = millis() / 1000;
         String url = "***REMOVED***&field1=" + String(co2ppm) +
-                     "&field2=" + String(up / 60) + "&field3=" + String(ppm) +
+                     "&field2=" + String(up / 60) + "&field3=" + String(co2->getPpmPwm()) +
                      "&field4=" + String(sensorsData.dsTempOne) + "&field5=" + String(sensorsData.bmeHum);
 
         HTTPClient http;
@@ -302,7 +268,7 @@ void loop() {
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
-        oled->displayIp(cnt++, NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr());
+        oled->displayIp(NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr());
     } else if (oledState == LOG) {
         oled->displayLog();
     } else if (oledState == OLED_AUTO_OFF_SWITCH) {
@@ -315,9 +281,9 @@ void loop() {
         oled->displayWifiChange();
         if (millis() - oledStateChangedTime > 5000) {
             meteoLog->add("Changing wifi network");
-            detachCo2Interrupt();
+            co2->detachCo2Interrupt();
             wifiConfig->startPortal();
-            attachCo2Interrupt();
+            co2->attachCo2Interrupt();
             oledState = SENSORS;
         }
     } else if (oledState == EMPTY) {
