@@ -276,7 +276,8 @@ void loop() {
         timeDataSend = millis();
         int up = millis() / 1000;
         String url = "***REMOVED***&field1=" + String(co2ppm) +
-                     "&field2=" + String(up / 60) + "&field3=" + String(ppm);
+                     "&field2=" + String(up / 60) + "&field3=" + String(ppm) +
+                     "&field4=" + String(sensorsData.dsTempOne);
 
         HTTPClient http;
         http.begin(url);
