@@ -5,7 +5,6 @@
 
 #define PWM D8
 
-// PWM
 int prevVal = LOW;
 long th, tl, h, l, ppm = 397;
 long ppmUpdateTime = -1000000;
