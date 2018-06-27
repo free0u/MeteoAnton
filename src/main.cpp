@@ -69,7 +69,8 @@ int oledStateNum = 3;
 const int SENSORS = 0;
 const int NETWORK = 1;
 const int LOG = 2;
-const int EMPTY = 4;
+const int OLED_AUTO_OFF_SWITCH = 3;
+const int EMPTY = 5;
 
 #include <MHZ19_uart.h>
 const int rx_pin = D1; // Serial rx pin no
@@ -256,6 +257,8 @@ int co2ppm;
 // #define RTC_TIME_UPDATE_TIMEOUT 5000
 long rtcTimeUpdate = -RTC_TIME_UPDATE_TIMEOUT;
 
+long oledStateChangedTime = 0;
+
 void loop() {
     otaUpdate.handle();
     tryUpdateSensors();
@@ -267,6 +270,7 @@ void loop() {
     }
 
     if (millis() - timeScan > 3000) {
+        Serial.println("Always on: " + String(oled->alwaysOn));
         timeScan = millis();
         co2ppm = mhz19.getPPM();
         meteoLog->add("co2 ppm " + String(co2ppm) + "(" + String(ppm) + ")");
@@ -285,6 +289,10 @@ void loop() {
         meteoLog->add("http code " + String(statusCode));
     }
 
+    if (!oled->alwaysOn && millis() - oledStateChangedTime > 7000) {
+        oledState = EMPTY;
+    }
+
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
@@ -295,15 +303,25 @@ void loop() {
         // oled->displayIp(cnt++, rtcToString(compiled), rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
     } else if (oledState == LOG) {
         oled->displayLog();
+    } else if (oledState == OLED_AUTO_OFF_SWITCH) {
+        oled->displayAutoOffSwitch();
+        if (millis() - oledStateChangedTime > 5000) {
+            oled->alwaysOn = !oled->alwaysOn;
+            oledState = SENSORS;
+        }
+    } else if (oledState == EMPTY) {
+        oled->displayEmpty();
     }
 
     delay(100);
     int buttonState = digitalRead(BUTTON);
     if (buttonState == HIGH) {
         if (millis() - timeButtonPress > 500) {
-            // Serial.println("Button on");
-
             timeButtonPress = millis();
+            oledStateChangedTime = millis();
+
+            oledState = (oledState + 1) % oledStateNum;
+            if (oledState == EMPTY) {
             oledState = (oledState + 1) % oledStateNum;
             // Serial.println("OLED state: " + String(oledState));
         }

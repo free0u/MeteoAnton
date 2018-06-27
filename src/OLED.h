@@ -15,6 +15,7 @@ class OLED {
     MeteoLog *meteoLog;
 
   public:
+    bool alwaysOn;
     OLED(MeteoLog *meteoLog) {
         this->meteoLog = meteoLog;
         display = new SSD1306(0x3C, D3, D5);
@@ -22,6 +23,7 @@ class OLED {
         display->flipScreenVertically();
         display->setContrast(1);
         display->setFont(ArialMT_Plain_10);
+        alwaysOn = true;
     }
     void displayIp(int cnt, String uptime, String rtc, String ntp) {
         display->clear();
@@ -30,9 +32,13 @@ class OLED {
         int contrast = cnt % 5;
 
         display->drawString(display->getWidth() / 2, display->getHeight() / 2,
-                            "IP: " + WiFi.localIP().toString() + "\nup " + uptime + "\n ntp " + ntp + "\n rtc " +
-                                rtc);
+                            "IP: " + WiFi.localIP().toString() + "\nup " + uptime + "\n ntp " + ntp + "\n rtc " + rtc);
         // display->setContrast(contrast);
+        display->display();
+    }
+
+    void displayEmpty() {
+        display->clear();
         display->display();
     }
 
@@ -72,6 +78,17 @@ class OLED {
         // display->drawString(0, 48, "pressure " + String(data.bmePressure) + " mmHg");
         display->drawString(0, 48, "co2  " + String((int)data.co2) + " ppm");
 
+        display->display();
+    }
+
+    void displayAutoOffSwitch() {
+        display->clear();
+        display->setFont(Monospaced_plain_12);
+        display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+        String status = alwaysOn ? "disabled" : "enabled";
+        display->drawString(display->getWidth() / 2, display->getHeight() / 2, "Auto off " + status);
+        // display->drawString(display->getWidth() / 2, display->getHeight() / 2 + 20, "Turn " + alwaysOn ? "off" :
+        // "on");
         display->display();
     }
     void displayLog() {
