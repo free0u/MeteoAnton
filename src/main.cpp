@@ -287,7 +287,7 @@ void loop() {
         int up = millis() / 1000;
         String url = "***REMOVED***&field1=" + String(co2ppm) +
                      "&field2=" + String(up / 60) + "&field3=" + String(ppm) +
-                     "&field4=" + String(sensorsData.dsTempOne);
+                     "&field4=" + String(sensorsData.dsTempOne) + "&field5=" + String(sensorsData.bmeHum);
 
         HTTPClient http;
         http.begin(url);
