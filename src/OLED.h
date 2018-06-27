@@ -25,11 +25,10 @@ class OLED {
         display->setFont(ArialMT_Plain_10);
         alwaysOn = true;
     }
-    void displayIp(int cnt, String uptime, String rtc, String ntp) {
+    void displayIp(String uptime, String rtc, String ntp) {
         display->clear();
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
-        int contrast = cnt % 5;
 
         String wifi = WiFi.SSID() + " (" + WiFi.localIP().toString() + ")\n";
         String up = "up " + uptime + "\n";
