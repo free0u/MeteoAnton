@@ -31,8 +31,12 @@ class OLED {
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
         int contrast = cnt % 5;
 
-        display->drawString(display->getWidth() / 2, display->getHeight() / 2,
-                            "IP: " + WiFi.localIP().toString() + "\nup " + uptime + "\n ntp " + ntp + "\n rtc " + rtc);
+        String wifi = WiFi.SSID() + " (" + WiFi.localIP().toString() + ")\n";
+        String up = "up " + uptime + "\n";
+        String timeNtpRtc = "ntp " + ntp + " (" + rtc + ")\n";
+
+        String text = wifi + timeNtpRtc + up;
+        display->drawString(display->getWidth() / 2, display->getHeight() / 2, text);
         // display->setContrast(contrast);
         display->display();
     }
