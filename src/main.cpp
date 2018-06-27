@@ -21,6 +21,7 @@ int cnt = 0;
 #include "SensorsData.h"
 #include "Timing.h"
 
+WiFiConfig *wifiConfig;
 SensorDallasTemp *temp;
 BME280 *bme;
 DHTSensor *dht;
@@ -65,11 +66,12 @@ void scan() {
 }
 
 int oledState = 2;
-int oledStateNum = 3;
+int oledStateNum = 6;
 const int SENSORS = 0;
 const int NETWORK = 1;
 const int LOG = 2;
 const int OLED_AUTO_OFF_SWITCH = 3;
+const int WIFI_CHANGE = 4;
 const int EMPTY = 5;
 
 #include <MHZ19_uart.h>
@@ -101,6 +103,10 @@ void PWM_ISR() {
     }
 }
 
+void attachCo2Interrupt() { attachInterrupt(digitalPinToInterrupt(PWM), PWM_ISR, CHANGE); }
+
+void detachCo2Interrupt() { detachInterrupt(PWM); }
+
 void setup() {
     Serial.begin(115200);
 
@@ -108,7 +114,7 @@ void setup() {
     SaveCrash.print();
 
     pinMode(PWM, INPUT);
-    attachInterrupt(digitalPinToInterrupt(PWM), PWM_ISR, CHANGE);
+    attachCo2Interrupt();
     // pinMode(PWM, OUTPUT);
     // digitalWrite(PWM, HIGH);
 
@@ -132,8 +138,8 @@ void setup() {
     // @todo: start configurator by pressing button, elsewhere just stay
     // disconnected
     oled->showMessage("Trying to connect WiFi");
-    WiFiConfig wifiConfig;
-    wifiConfig.connectWiFi(false);
+    wifiConfig = new WiFiConfig();
+    // wifiConfig->connectWiFi(false);
     led.off();
     oled->showMessage("WiFi connected");
 
@@ -296,17 +302,22 @@ void loop() {
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
-        RtcDateTime compiled;
-        compiled.InitWithEpoch32Time(millis() / 1000 - 6 * 60 * 60);
-
         oled->displayIp(cnt++, NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr());
-        // oled->displayIp(cnt++, rtcToString(compiled), rtcToString(Rtc.GetDateTime()), NTP.getTimeStr());
     } else if (oledState == LOG) {
         oled->displayLog();
     } else if (oledState == OLED_AUTO_OFF_SWITCH) {
         oled->displayAutoOffSwitch();
         if (millis() - oledStateChangedTime > 5000) {
             oled->alwaysOn = !oled->alwaysOn;
+            oledState = SENSORS;
+        }
+    } else if (oledState == WIFI_CHANGE) {
+        oled->displayWifiChange();
+        if (millis() - oledStateChangedTime > 5000) {
+            meteoLog->add("Changing wifi network");
+            detachCo2Interrupt();
+            wifiConfig->startPortal();
+            attachCo2Interrupt();
             oledState = SENSORS;
         }
     } else if (oledState == EMPTY) {
@@ -321,17 +332,12 @@ void loop() {
             oledStateChangedTime = millis();
 
             oledState = (oledState + 1) % oledStateNum;
+            if (oledState == WIFI_CHANGE && millis() > 60 * 1000) { // 2 min
+                oledState = (oledState + 1) % oledStateNum;
+            }
             if (oledState == EMPTY) {
-            oledState = (oledState + 1) % oledStateNum;
-            // Serial.println("OLED state: " + String(oledState));
+                oledState = (oledState + 1) % oledStateNum;
+            }
         }
     }
-
-    // IF button LONG PRESS and UPTIME smaller 1 minute
-    //     start WiFi Manager
-
-    // IF OLED works longer 1 minute
-    //     OLED state -> OFF
-    // IF button PUSHED
-    //     OLED state -> NEXT
 }

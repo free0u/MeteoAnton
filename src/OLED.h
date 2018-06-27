@@ -91,6 +91,15 @@ class OLED {
         // "on");
         display->display();
     }
+
+    void displayWifiChange() {
+        display->clear();
+        display->setFont(Monospaced_plain_12);
+        display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+        display->drawString(display->getWidth() / 2, display->getHeight() / 2, "WiFi scan?");
+        display->display();
+    }
+
     void displayLog() {
         display->clear();
 

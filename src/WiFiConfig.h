@@ -11,6 +11,7 @@ class WiFiConfig {
     WiFiManager wifiManager;
 
   public:
+    WiFiConfig() { WiFi.mode(WIFI_STA); }
     void connectWiFi(bool needReset) {
         if (needReset) {
             wifiManager.resetSettings();
@@ -21,6 +22,10 @@ class WiFiConfig {
             ESP.reset();
             delay(5000);
         }
+    }
+    void startPortal() {
+        // wifiManager.setConfigPortalTimeout(180);
+        wifiManager.startConfigPortal("NodeMCU-free0u");
     }
 };
 
