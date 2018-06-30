@@ -1,6 +1,7 @@
 #ifndef SensorsData_h
 #define SensorsData_h
 
+#include <Time.h>
 #include "Timeouts.h"
 
 class Sensor {
@@ -20,11 +21,13 @@ class Sensor {
     }
 
     float getIfUpdated() {
-        if (millis() - ts < SENSOR_CORRECT_TIMEOUT) {
+        if (now() - ts < SENSOR_CORRECT_TIMEOUT) {
             return value;
         }
         return NAN;
     }
+
+    long getTime() { return ts; }
 };
 
 class SensorsData {
