@@ -11,7 +11,12 @@ class WiFiConfig {
     WiFiManager wifiManager;
 
   public:
-    WiFiConfig() { WiFi.mode(WIFI_STA); }
+    WiFiConfig() {
+        WiFi.mode(WIFI_STA);
+        if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+            Serial.println("Connection Failed!");
+        }
+    }
     void connectWiFi(bool needReset) {
         if (needReset) {
             wifiManager.resetSettings();
