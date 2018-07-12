@@ -40,7 +40,29 @@ class SensorsData {
     Sensor co2;
     Sensor co2uart;
 
+    static const int SENSORS_COUNT = 7;
+
+    Sensor *sensors[SENSORS_COUNT] = {&dsTempOne, &dsTempTwo, &dhtHum, &bmeHum, &bmePressure, &co2, &co2uart};
+
     SensorsData() {}
+
+    String serialize() {
+        long timeNow = now();
+        String res = String(timeNow);
+        for (int i = 0; i < SENSORS_COUNT; i++) {
+            float value = sensors[i]->getIfUpdated();
+            if (!isnan(value)) {
+                long ts = sensors[i]->getTime();
+                res += ";";
+                res += String(value);
+                res += ";";
+                res += String(timeNow - ts);
+            } else {
+                res += ";;";
+            }
+        }
+        return res;
+    }
 };
 
 #endif

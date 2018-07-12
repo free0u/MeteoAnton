@@ -25,7 +25,7 @@ class OLED {
         display->setFont(ArialMT_Plain_10);
         alwaysOn = true;
     }
-    void displayIp(String uptime, String rtc, String ntp) {
+    void displayIp(String uptime, String rtc, String ntp, int cachedCount) {
         display->clear();
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
@@ -33,8 +33,8 @@ class OLED {
         String wifi = WiFi.SSID() + " (" + WiFi.localIP().toString() + ")\n";
         String up = "up " + uptime + "\n";
         String timeNtpRtc = "ntp " + ntp + " (" + rtc + ")\n";
-
-        String text = wifi + timeNtpRtc + up;
+        String cached = "cached: " + String(cachedCount);
+        String text = wifi + timeNtpRtc + up + cached;
         display->drawString(display->getWidth() / 2, display->getHeight() / 2, text);
         // display->setContrast(contrast);
         display->display();

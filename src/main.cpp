@@ -15,6 +15,7 @@
 #include "CO2Sensor.h"
 #include "OLEDStates.h"
 #include "Timeouts.h"
+#include "SensorsCache.h"
 
 #define BUTTON D4
 
@@ -30,13 +31,14 @@ Led led;
 Timing *timing;
 CO2Sensor *co2;
 
+SensorsCache cache;
 SensorsData sensorsData;
 long bootTime;
 
 void setup() {
     Serial.begin(115200);
 
-    // SaveCrash.clear();
+    SaveCrash.clear();
     SaveCrash.print();
 
     pinMode(PWM, INPUT);
@@ -99,12 +101,17 @@ void setup() {
     timing = new Timing();
     oled->showMessage("NTP/RTC init... Done");
 
-    // Serial.print("SPIFFS: ");
-    // Serial.println(SPIFFS.begin());
-    // FSInfo fs_info;
-    // SPIFFS.info(fs_info);
-    // Serial.println(fs_info.totalBytes);
-    // Serial.println(fs_info.usedBytes);
+    Serial.print("SPIFFS: ");
+    oled->showMessage("SPIFFS init...");
+    SPIFFS.begin();
+    oled->showMessage("SPIFFS init... Done");
+
+    SPIFFS.remove("/data.json");
+
+    FSInfo fs_info;
+    SPIFFS.info(fs_info);
+    Serial.println(fs_info.totalBytes);
+    Serial.println(fs_info.usedBytes);
 
     oledState = SENSORS;
 }
@@ -125,6 +132,7 @@ void tryUpdateSensors() {
     float bmePressure;
     float bmeHum;
     long millisNow = millis();
+    long timestampNow = -1;
 
     if (millisNow - sensorsDataUpdated > SENSORS_TIMEOUT) {
         sensorsDataUpdated = millisNow;
@@ -141,24 +149,28 @@ void tryUpdateSensors() {
         meteoLog->add("bmeHum " + String(bmeHum));
         meteoLog->add("Reading sensors... Done");
 
+        if (timestampNow == -1) {
+            timestampNow = timing->getRtcTimestamp();
+        }
+
         if (!isnan(dsTempOne)) {
-            sensorsData.dsTempOne.set(dsTempOne, millisNow);
+            sensorsData.dsTempOne.set(dsTempOne, timestampNow);
         }
 
         if (!isnan(dsTempTwo)) {
-            sensorsData.dsTempTwo.set(dsTempTwo, millisNow);
+            sensorsData.dsTempTwo.set(dsTempTwo, timestampNow);
         }
 
         if (!isnan(bmeHum)) {
-            sensorsData.bmeHum.set(bmeHum, millisNow);
+            sensorsData.bmeHum.set(bmeHum, timestampNow);
         }
 
         if (!isnan(bmePressure)) {
-            sensorsData.bmePressure.set(bmePressure, millisNow);
+            sensorsData.bmePressure.set(bmePressure, timestampNow);
         }
 
         if (millisNow - co2->getPpmUpateTime() < 10000) {
-            sensorsData.co2.set(co2->getPpmPwm(), millisNow);
+            sensorsData.co2.set(co2->getPpmPwm(), timestampNow);
         }
     }
 
@@ -168,15 +180,23 @@ void tryUpdateSensors() {
         meteoLog->add("dhtHum " + String(dhtHum));
 
         if (!isnan(dhtHum)) {
-            sensorsData.dhtHum.set(dhtHum, millis());
+            if (timestampNow == -1) {
+                timestampNow = timing->getRtcTimestamp();
+            }
+            sensorsData.dhtHum.set(dhtHum, timestampNow);
         }
     }
 
     if (millis() - timeScanCo2 > CO2_TIMEOUT) {
         timeScanCo2 = millis();
         int co2uart = co2->getPpmUart();
+        co2uart = 100;
+
         if (co2uart != -1) {
-            sensorsData.co2uart.set(co2uart, timeScanCo2);
+            if (timestampNow == -1) {
+                timestampNow = timing->getRtcTimestamp();
+            }
+            sensorsData.co2uart.set(co2uart, timestampNow);
         }
 
         meteoLog->add("co2 ppm " + String(co2uart) + "(" + String(co2->getPpmPwm()) + ")");
@@ -193,21 +213,55 @@ String generateThingspeakPair(int ind, Sensor sensor) {
 
 String generateThingspeakPair(int ind, int value) { return "&field" + String(ind) + "=" + String(value); }
 
-int sendData() {
+int sendDataTs() {
     int up = millis() / 1000;
-    String url = "***REMOVED***" +
-                 generateThingspeakPair(1, sensorsData.co2uart) + generateThingspeakPair(2, up / 60) +
-                 generateThingspeakPair(3, sensorsData.co2) + generateThingspeakPair(4, sensorsData.dsTempOne) +
-                 generateThingspeakPair(5, sensorsData.bmeHum);
+    String url = "***REMOVED***";
+
+    url += generateThingspeakPair(1, sensorsData.co2uart);
+    url += generateThingspeakPair(2, up / 60);
+    url += generateThingspeakPair(3, sensorsData.co2);
+    url += generateThingspeakPair(4, sensorsData.dsTempOne);
+    url += generateThingspeakPair(5, sensorsData.bmeHum);
+
     HTTPClient http;
     http.begin(url);
     int statusCode = http.GET();
+    http.end();
     return statusCode;
+}
+
+int sendDataApi() {
+    HTTPClient http;
+    http.begin("***REMOVED***");
+    http.setTimeout(5000);
+    int statusCode = http.POST(sensorsData.serialize());
+    http.end();
+    return statusCode;
+}
+
+long dumpJsonTime = -1e9;
+
+bool wifiOn() {
+    int sec = now();
+    int m = sec / 60;
+    bool res = m % 2 == 0;
+    // Serial.println("wifiOn(): " + String(res));
+    return res;
 }
 
 void loop() {
     otaUpdate.handle();
     tryUpdateSensors();
+
+    // if (millis() - dumpJsonTime > 5000) {
+    //     dumpJsonTime = millis();
+    //     // cache.dumpJson(sensorsData);
+    //     // cache.add(sensorsData);
+    //     // cache.printFile();
+    //     // Serial.println(sensorsData.serialize());
+    //     int cached = cache.getCachedCount();
+    //     Serial.println("Cached: " + String(cached));
+    // }
 
     if (millis() - rtcTimeUpdate > RTC_TIME_UPDATE_TIMEOUT) {
         rtcTimeUpdate = millis();
@@ -217,8 +271,23 @@ void loop() {
 
     if (millis() - timeDataSend > 16000) {
         timeDataSend = millis();
-        int statusCode = sendData();
+        int statusCode = sendDataTs();
         meteoLog->add("http code " + String(statusCode));
+
+        if (cache.empty()) {
+            int statusCode = -1;
+            if (wifiOn()) {
+                statusCode = sendDataApi();
+            }
+            if (statusCode != 200) {
+                cache.add(sensorsData);
+            }
+        } else {
+            cache.add(sensorsData);
+            if (wifiOn()) {
+                cache.sendCache();
+            }
+        }
     }
 
     if (!oled->alwaysOn && millis() - oledStateChangedTime > 7000) {
@@ -228,7 +297,7 @@ void loop() {
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
-        oled->displayIp(NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr());
+        oled->displayIp(NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr(), cache.getCachedCount());
     } else if (oledState == LOG) {
         oled->displayLog();
     } else if (oledState == OLED_AUTO_OFF_SWITCH) {
