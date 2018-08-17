@@ -221,24 +221,24 @@ String generateThingspeakPair(int ind, Sensor sensor) {
     return "&field" + String(ind) + "=" + String(value);
 }
 
-String generateThingspeakPair(int ind, int value) { return "&field" + String(ind) + "=" + String(value); }
+// String generateThingspeakPair(int ind, int value) { return "&field" + String(ind) + "=" + String(value); }
 
-int sendDataTs() {
-    int up = millis() / 1000;
-    String url = "***REMOVED***";
+// int sendDataTs() {
+//     int up = millis() / 1000;
+//     String url = "***REMOVED***";
 
-    url += generateThingspeakPair(1, sensorsData->co2uart);
-    url += generateThingspeakPair(2, up / 60);
-    url += generateThingspeakPair(3, sensorsData->co2);
-    url += generateThingspeakPair(4, sensorsData->dsTempOne);
-    url += generateThingspeakPair(5, sensorsData->bmeHum);
+//     url += generateThingspeakPair(1, sensorsData->co2uart);
+//     url += generateThingspeakPair(2, up / 60);
+//     url += generateThingspeakPair(3, sensorsData->co2);
+//     url += generateThingspeakPair(4, sensorsData->dsTempOne);
+//     url += generateThingspeakPair(5, sensorsData->bmeHum);
 
-    HTTPClient http;
-    http.begin(url);
-    int statusCode = http.GET();
-    http.end();
-    return statusCode;
-}
+//     HTTPClient http;
+//     http.begin(url);
+//     int statusCode = http.GET();
+//     http.end();
+//     return statusCode;
+// }
 
 int sendDataApi() {
     HTTPClient http;
@@ -252,29 +252,11 @@ int sendDataApi() {
 
 long dumpJsonTime = -1e9;
 
-bool wifiOn() {
-    return true;
-    int sec = now();
-    int m = sec / 60;
-    bool res = m % 2 == 0;
-    res = m % 10 < 5;
-    // Serial.println("wifiOn(): " + String(res));
-    return res;
-}
+bool wifiOn() { return true; }
 
 void loop() {
     otaUpdate.handle();
     tryUpdateSensors();
-
-    // if (millis() - dumpJsonTime > 5000) {
-    //     dumpJsonTime = millis();
-    //     // cache.dumpJson(sensorsData);
-    //     // cache.add(sensorsData);
-    //     // cache.printFile();
-    //     // Serial.println(sensorsData.serialize());
-    //     int cached = cache.getCachedCount();
-    //     Serial.println("Cached: " + String(cached));
-    // }
 
     if (millis() - rtcTimeUpdate > RTC_TIME_UPDATE_TIMEOUT) {
         rtcTimeUpdate = millis();
