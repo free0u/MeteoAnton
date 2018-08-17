@@ -31,8 +31,8 @@ Led led;
 Timing *timing;
 CO2Sensor *co2;
 
-SensorsCache cache;
-SensorsData sensorsData;
+SensorsCache *cache;
+SensorsData *sensorsData;
 long bootTime;
 
 void setup() {
@@ -113,6 +113,14 @@ void setup() {
     Serial.println(fs_info.totalBytes);
     Serial.println(fs_info.usedBytes);
 
+    oled->showMessage("Cache init...");
+    cache = new SensorsCache();
+    oled->showMessage("Cache init... Done");
+
+    oled->showMessage("SensorsData init...");
+    sensorsData = new SensorsData();
+    oled->showMessage("SensorsData init... Done");
+
     oledState = SENSORS;
 }
 
@@ -154,24 +162,26 @@ void tryUpdateSensors() {
         }
 
         if (!isnan(dsTempOne)) {
-            sensorsData.dsTempOne.set(dsTempOne, timestampNow);
+            sensorsData->dsTempOne.set(dsTempOne, timestampNow);
         }
 
         if (!isnan(dsTempTwo)) {
-            sensorsData.dsTempTwo.set(dsTempTwo, timestampNow);
+            sensorsData->dsTempTwo.set(dsTempTwo, timestampNow);
         }
 
         if (!isnan(bmeHum)) {
-            sensorsData.bmeHum.set(bmeHum, timestampNow);
+            sensorsData->bmeHum.set(bmeHum, timestampNow);
         }
 
         if (!isnan(bmePressure)) {
-            sensorsData.bmePressure.set(bmePressure, timestampNow);
+            sensorsData->bmePressure.set(bmePressure, timestampNow);
         }
 
         if (millisNow - co2->getPpmUpateTime() < 10000) {
-            sensorsData.co2.set(co2->getPpmPwm(), timestampNow);
+            sensorsData->co2.set(co2->getPpmPwm(), timestampNow);
         }
+
+        sensorsData->uptimeMinutes.set(millis() / 1000 / 60, timestampNow);
     }
 
     if (millis() - dhtSensorUpdated > DHT_TIMEOUT) {
@@ -183,7 +193,7 @@ void tryUpdateSensors() {
             if (timestampNow == -1) {
                 timestampNow = timing->getRtcTimestamp();
             }
-            sensorsData.dhtHum.set(dhtHum, timestampNow);
+            sensorsData->dhtHum.set(dhtHum, timestampNow);
         }
     }
 
@@ -196,7 +206,7 @@ void tryUpdateSensors() {
             if (timestampNow == -1) {
                 timestampNow = timing->getRtcTimestamp();
             }
-            sensorsData.co2uart.set(co2uart, timestampNow);
+            sensorsData->co2uart.set(co2uart, timestampNow);
         }
 
         meteoLog->add("co2 ppm " + String(co2uart) + "(" + String(co2->getPpmPwm()) + ")");
@@ -217,11 +227,11 @@ int sendDataTs() {
     int up = millis() / 1000;
     String url = "***REMOVED***";
 
-    url += generateThingspeakPair(1, sensorsData.co2uart);
+    url += generateThingspeakPair(1, sensorsData->co2uart);
     url += generateThingspeakPair(2, up / 60);
-    url += generateThingspeakPair(3, sensorsData.co2);
-    url += generateThingspeakPair(4, sensorsData.dsTempOne);
-    url += generateThingspeakPair(5, sensorsData.bmeHum);
+    url += generateThingspeakPair(3, sensorsData->co2);
+    url += generateThingspeakPair(4, sensorsData->dsTempOne);
+    url += generateThingspeakPair(5, sensorsData->bmeHum);
 
     HTTPClient http;
     http.begin(url);
@@ -234,7 +244,8 @@ int sendDataApi() {
     HTTPClient http;
     http.begin("***REMOVED***");
     http.setTimeout(5000);
-    int statusCode = http.POST(sensorsData.serialize());
+    http.addHeader("Sensors-Names", sensorsData->sensorsNames);
+    int statusCode = http.POST(sensorsData->serialize());
     http.end();
     return statusCode;
 }
@@ -242,9 +253,11 @@ int sendDataApi() {
 long dumpJsonTime = -1e9;
 
 bool wifiOn() {
+    return true;
     int sec = now();
     int m = sec / 60;
     bool res = m % 2 == 0;
+    res = m % 10 < 5;
     // Serial.println("wifiOn(): " + String(res));
     return res;
 }
@@ -269,23 +282,24 @@ void loop() {
         meteoLog->add("RTC updated: " + timing->getRtcDateTime());
     }
 
-    if (millis() - timeDataSend > 16000) {
+    if (millis() - timeDataSend > 58000) {
         timeDataSend = millis();
-        int statusCode = sendDataTs();
-        meteoLog->add("http code " + String(statusCode));
+        // int statusCode = sendDataTs();
+        // meteoLog->add("http code " + String(statusCode));
+        // Serial.println("Sensors-Names: " + sensorsData->sensorsNames);
 
-        if (cache.empty()) {
+        if (cache->empty()) {
             int statusCode = -1;
             if (wifiOn()) {
                 statusCode = sendDataApi();
             }
             if (statusCode != 200) {
-                cache.add(sensorsData);
+                cache->add(sensorsData);
             }
         } else {
-            cache.add(sensorsData);
+            cache->add(sensorsData);
             if (wifiOn()) {
-                cache.sendCache();
+                cache->sendCache(sensorsData->sensorsNames);
             }
         }
     }
@@ -297,7 +311,7 @@ void loop() {
     if (oledState == SENSORS) {
         oled->displaySensorsData(sensorsData);
     } else if (oledState == NETWORK) {
-        oled->displayIp(NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr(), cache.getCachedCount());
+        oled->displayIp(NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr(), cache->getCachedCount());
     } else if (oledState == LOG) {
         oled->displayLog();
     } else if (oledState == OLED_AUTO_OFF_SWITCH) {

@@ -27,6 +27,11 @@ class OLED {
     }
     void displayIp(String uptime, String rtc, String ntp, int cachedCount) {
         display->clear();
+
+        // display->fillRect(0, 0, 128, 64);
+        // display->display();
+        // return;
+
         display->setFont(ArialMT_Plain_10);
         display->setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
 
@@ -69,18 +74,18 @@ class OLED {
         return res;
     }
 
-    void displaySensorsData(SensorsData &data) {
+    void displaySensorsData(SensorsData *data) {
         display->clear();
 
         display->setTextAlignment(TEXT_ALIGN_LEFT);
         display->setFont(Monospaced_plain_12);
         // firstInString(data);
         display->drawString(
-            0, 0, "ds " + String(data.dsTempOne.getIfUpdated()) + " °C " + String(data.dsTempTwo.getIfUpdated()));
-        display->drawString(0, 16, "dht hum " + String(data.dhtHum.getIfUpdated()) + " %");
-        display->drawString(0, 32, "bme hum " + String(data.bmeHum.getIfUpdated()) + " %");
+            0, 0, "ds " + String(data->dsTempOne.getIfUpdated()) + " °C " + String(data->dsTempTwo.getIfUpdated()));
+        display->drawString(0, 16, "dht hum " + String(data->dhtHum.getIfUpdated()) + " %");
+        display->drawString(0, 32, "bme hum " + String(data->bmeHum.getIfUpdated()) + " %");
         // display->drawString(0, 48, "pressure " + String(data.bmePressure.getIfUpdated()) + " mmHg");
-        display->drawString(0, 48, "co2  " + String((int)data.co2.getIfUpdated()) + " ppm");
+        display->drawString(0, 48, "co2  " + String((int)data->co2.getIfUpdated()) + " ppm");
 
         display->display();
     }

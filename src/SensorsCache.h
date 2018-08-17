@@ -36,14 +36,14 @@ class SensorsCache {
         return false;
     }
 
-    bool add(SensorsData &data) {
+    bool add(SensorsData *data) {
         File dataFile = SPIFFS.open("/data.json", "a");
         if (!dataFile) {
             Serial.println("Failed to open config file for writing");
             return false;
         }
 
-        dataFile.print(data.serialize());
+        dataFile.print(data->serialize());
         dataFile.print("_");
         cacheIsEmpty = false;
         cachedCount++;
@@ -51,7 +51,7 @@ class SensorsCache {
         return true;
     }
 
-    bool sendCache() {
+    bool sendCache(String &sensorsNames) {
         File dataFile = SPIFFS.open("/data.json", "r");
         if (!dataFile) {
             Serial.println("Failed to open config file");
@@ -61,6 +61,7 @@ class SensorsCache {
         HTTPClient http;
         http.begin("***REMOVED***");
         http.setTimeout(5000);
+        http.addHeader("Sensors-Names", sensorsNames);
         int statusCode = http.sendRequest("POST", &dataFile, dataFile.size());
         http.end();
 

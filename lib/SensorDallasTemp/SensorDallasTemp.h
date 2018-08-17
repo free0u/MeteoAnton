@@ -22,7 +22,11 @@ class SensorDallasTemp {
         }
     }
 
-    float tempIsCorrect(float temp) { return -100 < temp && temp < 100; }
+    float tempIsCorrect(float temp) {
+        // return true;
+        return -80 < temp && temp < 80;
+        return -100 < temp && temp < 100;
+    }
 
     float temperatureByAddr(DeviceAddress deviceAddress) {
         sensors->setWaitForConversion(false);
@@ -80,8 +84,17 @@ class SensorDallasTemp {
 
     // first 28 61 64 11 8D 96 46 D3
     // second 28 61 64 11 BD D8 52 B6
-    DeviceAddress addrOne = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x46, 0xD3};
-    DeviceAddress addrTwo = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
+    // DeviceAddress addrOne = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x46, 0xD3};
+    // DeviceAddress addrTwo = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
+    // DeviceAddress addrTwo = {0x28, 0x64, 0x8B, 0x3B, 0x04, 0x00, 0x00, 0xF8};
+    // 28 64 8B 3B 04 00 00 F8
+
+    // new dallas
+    // 28 B0 37 E9 09 00 00 98
+    // 28 41 F7 E9 09 00 00 FF
+
+    DeviceAddress addrOne = {0x28, 0x41, 0xF7, 0xE9, 0x09, 0x00, 0x00, 0xFF};
+    DeviceAddress addrTwo = {0x28, 0xB0, 0x37, 0xE9, 0x09, 0x00, 0x00, 0x98};
 
     float temperatureOne() { return temperatureByAddr(addrOne); }
 

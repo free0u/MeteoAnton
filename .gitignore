@@ -7,3 +7,4 @@
 .vscode/extensions.json
 .vscode/tasks.json
 lib/readme.txt
+.travis.yml

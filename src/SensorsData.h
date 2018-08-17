@@ -8,11 +8,13 @@ class Sensor {
   private:
     long ts;
     float value;
+    String name;
 
   public:
-    Sensor() {
+    Sensor(String _name) {
         value = NAN;
         ts = -1e9;
+        name = _name;
     }
 
     void set(float v, long t) {
@@ -28,9 +30,27 @@ class Sensor {
     }
 
     long getTime() { return ts; }
+
+    String getName() { return name; }
 };
 
 class SensorsData {
+  private:
+    static const int SENSORS_COUNT = 8;
+    Sensor *sensors[SENSORS_COUNT] = {&dsTempOne,   &dsTempTwo, &dhtHum,  &bmeHum,
+                                      &bmePressure, &co2,       &co2uart, &uptimeMinutes};
+
+    String getSensorsNames() {
+        String res = "";
+        for (int i = 0; i < SENSORS_COUNT; i++) {
+            if (i > 0) {
+                res += ';';
+            }
+            res += sensors[i]->getName();
+        }
+        return res;
+    }
+
   public:
     Sensor dsTempOne;
     Sensor dsTempTwo;
@@ -39,12 +59,14 @@ class SensorsData {
     Sensor bmePressure;
     Sensor co2;
     Sensor co2uart;
+    Sensor uptimeMinutes;
+    String sensorsNames;
 
-    static const int SENSORS_COUNT = 7;
-
-    Sensor *sensors[SENSORS_COUNT] = {&dsTempOne, &dsTempTwo, &dhtHum, &bmeHum, &bmePressure, &co2, &co2uart};
-
-    SensorsData() {}
+    SensorsData()
+        : dsTempOne("temp_in"), dsTempTwo("temp_out"), dhtHum("hum_out"), bmeHum("hum_in"), bmePressure("pressure"),
+          co2("co2"), co2uart("co2uart"), uptimeMinutes("uptime") {
+        sensorsNames = getSensorsNames();
+    }
 
     String serialize() {
         long timeNow = now();
@@ -53,9 +75,9 @@ class SensorsData {
             float value = sensors[i]->getIfUpdated();
             if (!isnan(value)) {
                 long ts = sensors[i]->getTime();
-                res += ";";
+                res += ';';
                 res += String(value);
-                res += ";";
+                res += ';';
                 res += String(timeNow - ts);
             } else {
                 res += ";;";
