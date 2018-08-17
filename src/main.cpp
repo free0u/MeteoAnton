@@ -282,11 +282,8 @@ void loop() {
         meteoLog->add("RTC updated: " + timing->getRtcDateTime());
     }
 
-    if (millis() - timeDataSend > 58000) {
+    if (millis() - timeDataSend > SERVER_SENDING_TIMEOUT) {
         timeDataSend = millis();
-        // int statusCode = sendDataTs();
-        // meteoLog->add("http code " + String(statusCode));
-        // Serial.println("Sensors-Names: " + sensorsData->sensorsNames);
 
         if (cache->empty()) {
             int statusCode = -1;
