@@ -106,13 +106,6 @@ void setup() {
     SPIFFS.begin();
     oled->showMessage("SPIFFS init... Done");
 
-    SPIFFS.remove("/data.json");
-
-    FSInfo fs_info;
-    SPIFFS.info(fs_info);
-    Serial.println(fs_info.totalBytes);
-    Serial.println(fs_info.usedBytes);
-
     oled->showMessage("Cache init...");
     cache = new SensorsCache();
     oled->showMessage("Cache init... Done");

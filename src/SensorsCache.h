@@ -33,6 +33,8 @@ class SensorsCache {
             cachedCount = 0;
             return true;
         }
+        cacheIsEmpty = true;
+        cachedCount = 0;
         return false;
     }
 
