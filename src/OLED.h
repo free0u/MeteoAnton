@@ -23,7 +23,7 @@ class OLED {
         display->flipScreenVertically();
         display->setContrast(1);
         display->setFont(ArialMT_Plain_10);
-        alwaysOn = true;
+        alwaysOn = false;
     }
     void displayIp(String uptime, String rtc, String ntp, int cachedCount) {
         display->clear();
