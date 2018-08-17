@@ -1,7 +1,6 @@
 #ifndef SENSORS_CACHE_H
 #define SENSORS_CACHE_H
 
-#include <ArduinoJson.h>
 #include "SensorsData.h"
 
 class SensorsCache {
