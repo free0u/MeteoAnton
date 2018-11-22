@@ -193,7 +193,7 @@ void tryUpdateSensors() {
     if (millis() - timeScanCo2 > CO2_TIMEOUT) {
         timeScanCo2 = millis();
         int co2uart = co2->getPpmUart();
-        co2uart = 100;
+        // co2uart = 100;
 
         if (co2uart != -1) {
             if (timestampNow == -1) {
@@ -247,9 +247,18 @@ long dumpJsonTime = -1e9;
 
 bool wifiOn() { return true; }
 
+long stt = millis();
+bool is_calib = false;
+// bool is_calib = true;
+
 void loop() {
     otaUpdate.handle();
     tryUpdateSensors();
+
+    if (millis() - stt > 60 * 1000 && !is_calib) {
+        // co2->setZero();
+        // is_calib = true;
+    }
 
     if (millis() - rtcTimeUpdate > RTC_TIME_UPDATE_TIMEOUT) {
         rtcTimeUpdate = millis();

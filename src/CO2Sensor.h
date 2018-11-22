@@ -44,18 +44,21 @@ class CO2Sensor {
 
         mhz19 = new MHZ19_uart();
         mhz19->begin(rx_pin, tx_pin);
-        mhz19->setAutoCalibration(true);
+        mhz19->setAutoCalibration(false);
         // mhz19->setAutoCalibration(false);
+        mhz19->setRange(true);
         attachCo2Interrupt();
     }
     void attachCo2Interrupt() { attachInterrupt(digitalPinToInterrupt(PWM), PWM_ISR, CHANGE); }
 
     void detachCo2Interrupt() { detachInterrupt(PWM); }
 
-    int getPpmPwm() { return ppm; }
+    int getPpmPwm() { return ppm * 1; }
     long getPpmUpateTime() { return ppmUpdateTime; }
 
-    int getPpmUart() { return mhz19->getPPM(); }
+    int getPpmUart() { return mhz19->getPPM() * 1; }
+
+    void setZero() { mhz19->calibrateZero(); }
 };
 
 #endif

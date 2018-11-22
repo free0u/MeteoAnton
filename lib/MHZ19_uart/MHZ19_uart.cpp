@@ -42,6 +42,14 @@ void MHZ19_uart::calibrateSpan(int ppm) {
     writeCommand(com);
 }
 
+void MHZ19_uart::setRange(bool isRange5) {
+    if (isRange5) {
+        writeCommand(range5);
+    } else {
+        writeCommand(range2);
+    }
+}
+
 int MHZ19_uart::getPPM() { return getSerialData(PPM); }
 
 int MHZ19_uart::getTemperature() { return getSerialData(TEMPERATURE); }
