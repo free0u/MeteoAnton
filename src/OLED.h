@@ -85,7 +85,7 @@ class OLED {
         display->drawString(0, 16, "dht hum " + String(data->dhtHum.getIfUpdated()) + " %");
         display->drawString(0, 32, "bme hum " + String(data->bmeHum.getIfUpdated()) + " %");
         // display->drawString(0, 48, "pressure " + String(data.bmePressure.getIfUpdated()) + " mmHg");
-        display->drawString(0, 48, "co2  " + String((int)data->co2.getIfUpdated()) + " ppm");
+        // display->drawString(0, 48, "co2  " + String((int)data->co2.getIfUpdated()) + " ppm");
 
         display->display();
     }

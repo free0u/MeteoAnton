@@ -12,10 +12,11 @@ class WiFiConfig {
 
   public:
     WiFiConfig() {
-        WiFi.mode(WIFI_STA);
-        if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-            Serial.println("Connection Failed!");
-        }
+        // WiFi.mode(WIFI_STA);
+        // if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+        // Serial.println("Connection Failed!");
+        // }
+        wifiManager.setConfigPortalTimeout(240);
     }
     void connectWiFi(bool needReset) {
         if (needReset) {

@@ -17,43 +17,60 @@ class Timing {
     }
 
   public:
+    boolean syncEventTriggered = false; // True if a time even has been triggered
+    NTPSyncEvent_t ntpEvent;            // Last triggered event
+
     Timing() {
-        Rtc = new RtcDS3231<TwoWire>(Wire);
+        NTP.begin("ru.pool.ntp.org");
+        NTP.setInterval(5);
 
-        Rtc->Begin();
-        if (!Rtc->IsDateTimeValid()) {
-            Serial.println("RTC lost confidence in the DateTime!");
+        NTP.onNTPSyncEvent([&](NTPSyncEvent_t event) {
+            // ntpEvent = event;
+            syncEventTriggered = true;
+            processSyncEvent(event);
+        });
+
+        // if (NTP.getLastNTPSync() == 0 && Rtc->IsDateTimeValid()) {
+        //     Serial.println("NTP set by RTC");
+        //     setTime(getRtcTimestamp());
+        // }
+    }
+
+    void dumpNtp() {
+        if (syncEventTriggered) {
+            processSyncEvent(ntpEvent);
+            syncEventTriggered = false;
+        } else {
+            Serial.println("syncEventTriggered false");
         }
+    }
 
-        if (!Rtc->GetIsRunning()) {
-            Serial.println("RTC was not actively running, starting now");
-            Rtc->SetIsRunning(true);
-        }
-        Rtc->Enable32kHzPin(false);
-        Rtc->SetSquareWavePin(DS3231SquareWavePin_ModeNone);
-
-        NTP.begin("pool.ntp.org");
-        NTP.setInterval(63);
-
-        if (NTP.getLastNTPSync() == 0 && Rtc->IsDateTimeValid()) {
-            Serial.println("NTP set by RTC");
-            setTime(getRtcTimestamp());
+    void processSyncEvent(NTPSyncEvent_t ntpEvent) {
+        if (ntpEvent) {
+            Serial.print("Time Sync error: ");
+            if (ntpEvent == noResponse)
+                Serial.println("NTP server not reachable");
+            else if (ntpEvent == invalidAddress)
+                Serial.println("Invalid NTP server address");
+        } else {
+            Serial.print("Got NTP time: ");
+            Serial.println(NTP.getTimeDateString(NTP.getLastNTPSync()));
         }
     }
 
     void dumpLastNTPSync() { Serial.println("LastNTPSync: " + String(NTP.getLastNTPSync())); }
 
-    void updateRtc() {
-        if (now() > 1529939906 && NTP.getLastNTPSync() != 0) { // 25 Jun 2018 20:18:26 CHEL
-            compiled.InitWithEpoch32Time(now());
-            Rtc->SetDateTime(compiled);
-            Serial.println("RTC updated by now()");
-        }
-    }
+    // void updateRtc() {
+    //     if (now() > 1529939906 && NTP.getLastNTPSync() != 0) { // 25 Jun 2018 20:18:26 CHEL
+    //         compiled.InitWithEpoch32Time(now());
+    //         Rtc->SetDateTime(compiled);
+    //         Serial.println("RTC updated by now()");
+    //     }
+    // }
 
-    String getRtcDateTime() { return rtcToString(Rtc->GetDateTime()); }
+    // String getRtcDateTime() { return rtcToString(Rtc->GetDateTime()); }
 
-    long getRtcTimestamp() { return Rtc->GetDateTime().Epoch64Time(); }
+    // long getRtcTimestamp() { return Rtc->GetDateTime().Epoch64Time(); }
 };
 
 #endif

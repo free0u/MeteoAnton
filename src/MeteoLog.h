@@ -9,7 +9,7 @@ class MeteoLog {
     bool printToSerial = true;
 
   public:
-    MeteoLog() {
+MeteoLog() {
         firstMessageInd = 0;
         for (size_t i = 0; i < NUM; i++) {
             messages[i] = "";
