@@ -1,7 +1,7 @@
 #ifndef LED_H
 #define LED_H
 
-#define LED D0
+#define LED D4
 
 class Led {
   private:
@@ -10,11 +10,18 @@ class Led {
   public:
     Led() { pinMode(LED, OUTPUT); }
     void on() {
-        analogWrite(LED, 300);
+        // digitalWrite(LED, LOW);
+        analogWrite(LED, 1010);
         ledIsOn = true;
     }
+
+    void on(int x) {
+        analogWrite(LED, x);
+        ledIsOn = true;
+    }
+
     void off() {
-        analogWrite(LED, 0);
+        digitalWrite(LED, HIGH);
         ledIsOn = false;
     }
     void change() {

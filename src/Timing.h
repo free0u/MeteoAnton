@@ -21,8 +21,8 @@ class Timing {
     NTPSyncEvent_t ntpEvent;            // Last triggered event
 
     Timing() {
-        NTP.begin("ru.pool.ntp.org");
-        NTP.setInterval(5);
+        NTP.begin("pool.ntp.org");
+        NTP.setInterval(30);
 
         NTP.onNTPSyncEvent([&](NTPSyncEvent_t event) {
             // ntpEvent = event;

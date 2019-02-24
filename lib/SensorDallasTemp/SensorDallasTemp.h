@@ -2,7 +2,7 @@
 #include <OneWire.h>
 // #include <HardwareSerial.h>
 
-#define ONE_WIRE_BUS D7
+#define ONE_WIRE_BUS D6
 #define TEMPERATURE_PRECISION 9
 
 class SensorDallasTemp {
@@ -82,23 +82,22 @@ class SensorDallasTemp {
         }
     }
 
-    // first 28 61 64 11 8D 96 46 D3
-    // second 28 61 64 11 BD D8 52 B6
-    // DeviceAddress addrOne = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x46, 0xD3};
-    // DeviceAddress addrTwo = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
-    // DeviceAddress addrTwo = {0x28, 0x64, 0x8B, 0x3B, 0x04, 0x00, 0x00, 0xF8};
-    // 28 64 8B 3B 04 00 00 F8
+    // one 28 72 8B 26 0A 00 00 40
+    DeviceAddress addrOne = {0x28, 0x72, 0x8B, 0x26, 0x0A, 0x00, 0x00, 0x40};
 
-    // new dallas
-    // 28 B0 37 E9 09 00 00 98
-    // 28 41 F7 E9 09 00 00 FF
+    // two 28 EC BE 26 0A 00 00 B4
+    DeviceAddress addrTwo = {0x28, 0xEC, 0xBE, 0x26, 0x0A, 0x00, 0x00, 0xB4};
 
-    DeviceAddress addrOne = {0x28, 0x41, 0xF7, 0xE9, 0x09, 0x00, 0x00, 0xFF};
-    DeviceAddress addrTwo = {0x28, 0xB0, 0x37, 0xE9, 0x09, 0x00, 0x00, 0x98};
+    // three 28 6C A5 25 0A 00 00 DA
+    DeviceAddress addrThree = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
 
-    float temperatureOne() { return temperatureByAddr(addrOne); }
+    DeviceAddress addr2 = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
+
+    float temperatureOne() { return temperatureByAddr(addr2); }
 
     float temperatureTwo() { return temperatureByAddr(addrTwo); }
+
+    float temperatureThree() { return temperatureByAddr(addrThree); }
 
     float printTemperature2() {
         sensors->setWaitForConversion(false);

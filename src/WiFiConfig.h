@@ -11,26 +11,33 @@ class WiFiConfig {
     WiFiManager wifiManager;
 
   public:
-    WiFiConfig() {
-        // WiFi.mode(WIFI_STA);
-        // if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-        // Serial.println("Connection Failed!");
-        // }
-        wifiManager.setConfigPortalTimeout(240);
-    }
-    void connectWiFi(bool needReset) {
-        if (needReset) {
-            wifiManager.resetSettings();
+    WiFiConfig() {}
+
+    bool connect() {
+        WiFi.mode(WIFI_STA);
+        WiFi.begin();
+        if (WiFi.waitForConnectResult() != WL_CONNECTED) {
+            Serial.println("Connection Failed!");
+            return false;
         }
-        if (!wifiManager.autoConnect("NodeMCU-free0u")) {
-            Serial.println("Failed to connect, we should reset as see if it connects");
-            delay(3000);
-            ESP.reset();
-            delay(5000);
-        }
+        return true;
     }
+
+    // void connectWiFi(bool needReset) {
+    //     if (needReset) {
+    //         wifiManager.resetSettings();
+    //     }
+    //     if (!wifiManager.autoConnect("NodeMCU-free0u")) {
+    //         Serial.println("Failed to connect, we should reset as see if it connects");
+    //         delay(3000);
+    //         ESP.reset();
+    //         delay(5000);
+    //     }
+    // }
+
     void startPortal() {
-        // wifiManager.setConfigPortalTimeout(180);
+        wifiManager.resetSettings();
+        wifiManager.setConfigPortalTimeout(240);
         wifiManager.startConfigPortal("NodeMCU-free0u");
     }
 };

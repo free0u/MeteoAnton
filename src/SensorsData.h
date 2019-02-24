@@ -25,6 +25,10 @@ class Sensor {
     }
 
     float getIfUpdated() {
+        long present = 1543176962;                                // 11/25/2018 @ 8:16pm (UTC)
+        if (ts < present || now() < present || ts > 2082758400) { // 01/01/2036 @ 12:00am (UTC)
+            return NAN;
+        }
         if (now() - ts < SENSOR_CORRECT_TIMEOUT) {
             return value;
         }
@@ -38,8 +42,8 @@ class Sensor {
 
 class SensorsData {
   private:
-    static const int SENSORS_COUNT = 3;
-    Sensor *sensors[SENSORS_COUNT] = {&co21, &co22, &uptime};
+    static const int SENSORS_COUNT = 4;
+    Sensor *sensors[SENSORS_COUNT] = {&dsTemp, &dhtHum, &co2, &uptime};
 
     String getSensorsNames() {
         String res = "";
@@ -53,17 +57,17 @@ class SensorsData {
     }
 
   public:
-    Sensor co21;
+    Sensor co2;
     Sensor uptime;
-    Sensor co22;
 
-    Sensor dsTempOne;
-    Sensor dsTempTwo;
+    Sensor dsTemp;
     Sensor dhtHum;
     Sensor bmeHum;
     String sensorsNames;
 
-    SensorsData() : co21("co2direct"), uptime("uptimewave"), co22("co2wave") { sensorsNames = getSensorsNames(); }
+    SensorsData() : dsTemp("temp_in"), dhtHum("hum_in"), co2("co2"), uptime("uptime") {
+        sensorsNames = getSensorsNames();
+    }
 
     String serialize() {
         long timeNow = now();

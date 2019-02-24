@@ -27,20 +27,19 @@ class SensorsCache {
     bool empty() { return cacheIsEmpty; }
 
     bool clear() {
-        if (SPIFFS.remove("/data.json")) {
-            cacheIsEmpty = true;
-            cachedCount = 0;
-            return true;
-        }
         cacheIsEmpty = true;
         cachedCount = 0;
-        return false;
+        return SPIFFS.remove("/data.json");
     }
 
     bool add(SensorsData *data) {
         File dataFile = SPIFFS.open("/data.json", "a");
         if (!dataFile) {
             Serial.println("Failed to open config file for writing");
+            return false;
+        }
+
+        if (cachedCount > 8000) {
             return false;
         }
 
