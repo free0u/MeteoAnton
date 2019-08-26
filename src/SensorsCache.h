@@ -58,12 +58,19 @@ class SensorsCache {
             return false;
         }
 
+        Serial.println("Sending data...");
+
         HTTPClient http;
-        http.begin("***REMOVED***");
-        http.setTimeout(5000);
+        http.begin("***REMOVED***wave");
+        http.setTimeout(10000);
         http.addHeader("Sensors-Names", sensorsNames);
         int statusCode = http.sendRequest("POST", &dataFile, dataFile.size());
+        String payload = http.getString();
+        Serial.println("Code: " + String(statusCode));
+        Serial.println("Payload: " + payload);
+
         http.end();
+        Serial.println("Sending data complete...");
 
         if (statusCode == 200) {
             clear();

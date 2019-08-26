@@ -2,7 +2,8 @@
 #include <OneWire.h>
 // #include <HardwareSerial.h>
 
-#define ONE_WIRE_BUS D6
+// #define ONE_WIRE_BUS D6 // 1
+#define ONE_WIRE_BUS D6 // 2
 #define TEMPERATURE_PRECISION 9
 
 class SensorDallasTemp {
@@ -93,7 +94,9 @@ class SensorDallasTemp {
 
     DeviceAddress addr2 = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
 
-    float temperatureOne() { return temperatureByAddr(addrOne); }
+    // addrOne // 1
+    // addr2 // 2
+    float temperatureOne() { return temperatureByAddr(addr2); }
 
     float temperatureTwo() { return temperatureByAddr(addrTwo); }
 

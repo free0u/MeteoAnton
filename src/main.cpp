@@ -17,6 +17,11 @@
 #include "Timeouts.h"
 #include "SensorsCache.h"
 
+// Call to ESpressif SDK
+extern "C" {
+#include <user_interface.h>
+}
+
 #define BUTTON 0
 
 OTAUpdate otaUpdate;
@@ -80,7 +85,8 @@ void setup() {
 
     // DHT11
     oled->showMessage("DHT22 init...");
-    dht = new DHTSensor(D3);
+    // dht = new DHTSensor(D3); // 1
+    dht = new DHTSensor(D1); // 2
     oled->showMessage("DHT22 init... Done");
 
     // NTP and RTC
@@ -96,9 +102,19 @@ void setup() {
     cache = new SensorsCache();
     oled->showMessage("Cache init... Done");
 
-    oled->showMessage("SensorsData init...");
+    ("SensorsData init...");
     sensorsData = new SensorsData();
     oled->showMessage("SensorsData init... Done");
+
+    // change MAC
+    oled->showMessage(" *********** OLD ESP8266 MAC: *********** ");
+    oled->showMessage(String(WiFi.macAddress()));
+
+    uint8_t mac[6]{0xA8, 0xD8, 0xB4, 0x1D, 0xAA, 0xCE};
+    wifi_set_macaddr(0, const_cast<uint8 *>(mac));
+
+    oled->showMessage(" *********** NEW ESP8266 MAC:  *********** ");
+    oled->showMessage(String(WiFi.macAddress()));
 }
 
 // timers
@@ -196,11 +212,19 @@ String generateThingspeakPair(int ind, Sensor sensor) {
 
 int sendDataApi() {
     HTTPClient http;
-    http.begin("***REMOVED***");
-    http.setTimeout(5000);
+
+    oled->showMessage("Sending data...");
+
+    http.begin("***REMOVED***wave");
+    http.setTimeout(10000);
     http.addHeader("Sensors-Names", sensorsData->sensorsNames);
     int statusCode = http.POST(sensorsData->serialize());
+    String payload = http.getString();
+    oled->showMessage("Code: " + String(statusCode));
+    oled->showMessage("Payload: " + payload);
+
     http.end();
+    oled->showMessage("Sending data complete...");
     return statusCode;
 }
 

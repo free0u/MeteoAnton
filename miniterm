@@ -136,7 +136,7 @@ miniterm.TRANSFORMATIONS['espstackdecoder'] = ESPStackDecoder
 
 #miniterm.main(default_port="/dev/ttyUSB0", default_baudrate=115200)
 serial_instance = serial.serial_for_url(
-                "/dev/cu.wchusbserial1410",
+                "/dev/cu.wchusbserial1420",
                 115200,
                 do_not_open = True)
 
