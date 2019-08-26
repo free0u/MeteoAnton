@@ -80,7 +80,7 @@ void setup() {
 
     // DHT11
     oled->showMessage("DHT22 init...");
-    dht = new DHTSensor(D1);
+    dht = new DHTSensor(D3);
     oled->showMessage("DHT22 init... Done");
 
     // NTP and RTC

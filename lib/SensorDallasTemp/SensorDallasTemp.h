@@ -93,7 +93,7 @@ class SensorDallasTemp {
 
     DeviceAddress addr2 = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
 
-    float temperatureOne() { return temperatureByAddr(addr2); }
+    float temperatureOne() { return temperatureByAddr(addrOne); }
 
     float temperatureTwo() { return temperatureByAddr(addrTwo); }
 
