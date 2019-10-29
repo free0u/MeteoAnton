@@ -2,8 +2,8 @@
 #include <OneWire.h>
 // #include <HardwareSerial.h>
 
-// #define ONE_WIRE_BUS D6 // 1
-#define ONE_WIRE_BUS D6 // 2
+#define ONE_WIRE_BUS D6 // 1 opus
+// #define ONE_WIRE_BUS D6 // 2 wave
 #define TEMPERATURE_PRECISION 9
 
 class SensorDallasTemp {
@@ -94,13 +94,21 @@ class SensorDallasTemp {
 
     DeviceAddress addr2 = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
 
-    // addrOne // 1
-    // addr2 // 2
-    float temperatureOne() { return temperatureByAddr(addr2); }
+// 28 61 64 11 8D 96 46 D3
+    DeviceAddress addrChelIn1 = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x46, 0xD3};
+// 28 61 64 11 BD D8 52 B6
+    DeviceAddress addrChelIn2 = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
+// 28 8C 99 3B 04 00 00 8F
+    DeviceAddress addrChelOut = {0x28, 0x8C, 0x99, 0x3B, 0x04, 0x00, 0x00, 0x8F};
 
-    float temperatureTwo() { return temperatureByAddr(addrTwo); }
+    // addrOne // 1 opus
+    // addr2 // 2 wave
+    // addrChelIn1, addrChelIn1, // chel
+    float temperatureOne() { return temperatureByAddr(addrChelIn1); }
 
-    float temperatureThree() { return temperatureByAddr(addrThree); }
+    float temperatureTwo() { return temperatureByAddr(addrChelIn2); }
+
+    float temperatureThree() { return temperatureByAddr(addrChelOut); }
 
     float printTemperature2() {
         sensors->setWaitForConversion(false);

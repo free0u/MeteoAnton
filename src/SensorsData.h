@@ -42,8 +42,8 @@ class Sensor {
 
 class SensorsData {
   private:
-    static const int SENSORS_COUNT = 4;
-    Sensor *sensors[SENSORS_COUNT] = {&dsTemp, &dhtHum, &co2, &uptime};
+    static const int SENSORS_COUNT = 6;
+    Sensor *sensors[SENSORS_COUNT] = {&dsTempIn1, &dsTempIn2, &dsTempOut, &dhtHum, &co2, &uptime};
 
     String getSensorsNames() {
         String res = "";
@@ -60,12 +60,14 @@ class SensorsData {
     Sensor co2;
     Sensor uptime;
 
-    Sensor dsTemp;
+    Sensor dsTempIn1;
+    Sensor dsTempIn2;
+    Sensor dsTempOut;
     Sensor dhtHum;
     Sensor bmeHum;
     String sensorsNames;
 
-    SensorsData() : dsTemp("temp_in"), dhtHum("hum_in"), co2("co2"), uptime("uptime") {
+    SensorsData() : dsTempIn1("temp_in"), dsTempIn2("temp_in_bak"), dsTempOut("temp_out"), dhtHum("hum_in"), co2("co2"), uptime("uptime") {
         sensorsNames = getSensorsNames();
     }
 

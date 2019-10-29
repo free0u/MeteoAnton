@@ -85,8 +85,8 @@ void setup() {
 
     // DHT11
     oled->showMessage("DHT22 init...");
-    // dht = new DHTSensor(D3); // 1
-    dht = new DHTSensor(D1); // 2
+    dht = new DHTSensor(D3); // 1 opus
+    // dht = new DHTSensor(D1); // 2 wave
     oled->showMessage("DHT22 init... Done");
 
     // NTP and RTC
@@ -111,7 +111,7 @@ void setup() {
     oled->showMessage(String(WiFi.macAddress()));
 
     uint8_t mac[6]{0xA8, 0xD8, 0xB4, 0x1D, 0xAA, 0xCE};
-    wifi_set_macaddr(0, const_cast<uint8 *>(mac));
+    // wifi_set_macaddr(0, const_cast<uint8 *>(mac));
 
     oled->showMessage(" *********** NEW ESP8266 MAC:  *********** ");
     oled->showMessage(String(WiFi.macAddress()));
@@ -130,7 +130,9 @@ long dhtSensorUpdated = -1e9;
 int buttonCount = 0;
 
 void tryUpdateSensors() {
-    float dsTemp;
+    float dsTempIn1;
+    float dsTempIn2;
+    float dsTempOut;
     float dhtHum;
     long millisNow = millis();
     long timestampNow = -1;
@@ -139,18 +141,29 @@ void tryUpdateSensors() {
         sensorsDataUpdated = millisNow;
 
         meteoLog->add("Reading sensors...");
-        dsTemp = temp->temperatureOne();
+        dsTempIn1 = temp->temperatureOne();
+        dsTempIn2 = temp->temperatureTwo();
+        dsTempOut = temp->temperatureThree();
 
-        meteoLog->add("dsTemp " + String(dsTemp));
+        meteoLog->add("dsTempIn1 " + String(dsTempIn1));
+        meteoLog->add("dsTempIn2 " + String(dsTempIn2));
+        meteoLog->add("dsTempOut " + String(dsTempOut));
         meteoLog->add("Reading sensors... Done");
 
         if (timestampNow == -1) {
             timestampNow = now();
         }
 
-        if (!isnan(dsTemp)) {
-            sensorsData->dsTemp.set(dsTemp, timestampNow);
+        if (!isnan(dsTempIn1)) {
+            sensorsData->dsTempIn1.set(dsTempIn1, timestampNow);
         }
+        if (!isnan(dsTempIn2)) {
+            sensorsData->dsTempIn2.set(dsTempIn2, timestampNow);
+        }
+        if (!isnan(dsTempOut)) {
+            sensorsData->dsTempOut.set(dsTempOut, timestampNow);
+        }
+        
 
         sensorsData->uptime.set(millis() / 1000 / 60, timestampNow);
     }
@@ -215,7 +228,7 @@ int sendDataApi() {
 
     oled->showMessage("Sending data...");
 
-    http.begin("***REMOVED***wave");
+    http.begin("***REMOVED***chel");
     http.setTimeout(10000);
     http.addHeader("Sensors-Names", sensorsData->sensorsNames);
     int statusCode = http.POST(sensorsData->serialize());
