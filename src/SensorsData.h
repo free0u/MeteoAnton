@@ -5,15 +5,15 @@
 #include "Timeouts.h"
 
 class Sensor {
-  private:
+   private:
     long ts;
     float value;
     String name;
 
-  public:
+   public:
     Sensor() {}
 
-    Sensor(String _name) {
+    void init(String _name) {
         value = NAN;
         ts = -1e9;
         name = _name;
@@ -25,8 +25,8 @@ class Sensor {
     }
 
     float getIfUpdated() {
-        long present = 1543176962;                                // 11/25/2018 @ 8:16pm (UTC)
-        if (ts < present || now() < present || ts > 2082758400) { // 01/01/2036 @ 12:00am (UTC)
+        long present = 1543176962;                                 // 11/25/2018 @ 8:16pm (UTC)
+        if (ts < present || now() < present || ts > 2082758400) {  // 01/01/2036 @ 12:00am (UTC)
             return NAN;
         }
         if (now() - ts < SENSOR_CORRECT_TIMEOUT) {
@@ -41,7 +41,7 @@ class Sensor {
 };
 
 class SensorsData {
-  private:
+   private:
     static const int SENSORS_COUNT = 6;
     Sensor *sensors[SENSORS_COUNT] = {&dsTempIn1, &dsTempIn2, &dsTempOut, &dhtHum, &co2, &uptime};
 
@@ -56,7 +56,7 @@ class SensorsData {
         return res;
     }
 
-  public:
+   public:
     Sensor co2;
     Sensor uptime;
 
@@ -67,7 +67,14 @@ class SensorsData {
     Sensor bmeHum;
     String sensorsNames;
 
-    SensorsData() : dsTempIn1("temp_in"), dsTempIn2("temp_in_bak"), dsTempOut("temp_out"), dhtHum("hum_in"), co2("co2"), uptime("uptime") {
+    SensorsData() {}
+    void init() {
+        dsTempIn1.init("temp_in");
+        dsTempIn2.init("temp_in_bak");
+        dsTempOut.init("temp_out");
+        dhtHum.init("hum_in");
+        co2.init("co2");
+        uptime.init("uptime");
         sensorsNames = getSensorsNames();
     }
 

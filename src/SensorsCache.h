@@ -4,13 +4,14 @@
 #include "SensorsData.h"
 
 class SensorsCache {
-  private:
+   private:
     bool cacheIsEmpty;
     int cachedCount;
     static const int ONE_MEASURE_LEN = 70;
 
-  public:
-    SensorsCache() {
+   public:
+    SensorsCache() {}
+    void init() {
         if (SPIFFS.exists("/data.json")) {
             File file = SPIFFS.open("/data.json", "r");
             int sz = file.size();

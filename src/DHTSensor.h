@@ -8,11 +8,12 @@
 #define DHTTYPE DHT22
 
 class DHTSensor {
-  private:
+   private:
     DHT *dht;
 
-  public:
-    DHTSensor(uint8_t pin) {
+   public:
+    DHTSensor() {}
+    void init(uint8_t pin) {
         dht = new DHT(pin, DHTTYPE);
         dht->begin();
     }

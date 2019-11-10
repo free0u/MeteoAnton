@@ -6,7 +6,7 @@
 #include "SoftwareSerial.h"
 
 class CO2SensorSenseAir {
-  private:
+   private:
     // MHZ19_uart *mhz19;
     SoftwareSerial *Sensor;
 
@@ -32,8 +32,9 @@ class CO2SensorSenseAir {
 
     int rx, tx;
 
-  public:
-    CO2SensorSenseAir(int _rx, int _tx) { // D1 D2
+   public:
+    CO2SensorSenseAir() {}
+    void init(int _rx, int _tx) {  // D1 D2
         rx = _rx;
         tx = _tx;
         Sensor = new SoftwareSerial(rx, tx);
@@ -81,7 +82,7 @@ class CO2SensorSenseAir {
     //     return true;
     // }
 
-  private:
+   private:
     // bool writeCommandCalib(uint8_t cmd[]) {
     //     SoftwareSerial *hserial;
     //     hserial = new SoftwareSerial(rx, tx);
@@ -200,10 +201,10 @@ class CO2SensorSenseAir {
     // }
 
     unsigned long getValue(uint8_t packet[]) {
-        int high = packet[3]; // high byte for value is 4th byte in packet in the packet
-        int low = packet[4];  // low byte for value is 5th byte in the packet
+        int high = packet[3];  // high byte for value is 4th byte in packet in the packet
+        int low = packet[4];   // low byte for value is 5th byte in the packet
 
-        unsigned long val = high * 256 + low; // Combine high byte and low byte with this formula to get value
+        unsigned long val = high * 256 + low;  // Combine high byte and low byte with this formula to get value
         return val * valMultiplier;
     }
 };

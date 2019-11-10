@@ -2,14 +2,16 @@
 #define METEOLOG_H
 
 class MeteoLog {
-  private:
+   private:
     static const int NUM = 6;
     String messages[NUM];
     int firstMessageInd;
     bool printToSerial = true;
 
-  public:
-MeteoLog() {
+   public:
+    MeteoLog() {}
+
+    void init() {
         firstMessageInd = 0;
         for (size_t i = 0; i < NUM; i++) {
             messages[i] = "";

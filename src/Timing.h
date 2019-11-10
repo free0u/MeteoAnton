@@ -6,7 +6,7 @@
 #include <Wire.h>
 
 class Timing {
-  private:
+   private:
     RtcDS3231<TwoWire> *Rtc;
     RtcDateTime compiled;
 
@@ -16,11 +16,12 @@ class Timing {
         return String(datestring);
     }
 
-  public:
-    boolean syncEventTriggered = false; // True if a time even has been triggered
-    NTPSyncEvent_t ntpEvent;            // Last triggered event
+   public:
+    boolean syncEventTriggered = false;  // True if a time even has been triggered
+    NTPSyncEvent_t ntpEvent;             // Last triggered event
 
-    Timing() {
+    Timing() {}
+    void init() {
         NTP.begin("pool.ntp.org");
         NTP.setInterval(30);
 

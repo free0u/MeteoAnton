@@ -2,23 +2,22 @@
 #include <OneWire.h>
 // #include <HardwareSerial.h>
 
-#define ONE_WIRE_BUS D6 // 1 opus
+#define ONE_WIRE_BUS D6  // 1 opus
 // #define ONE_WIRE_BUS D6 // 2 wave
 #define TEMPERATURE_PRECISION 9
 
 class SensorDallasTemp {
-  private:
+   private:
     OneWire *oneWire;
     DallasTemperature *sensors;
 
-    int numberOfDevices;             // Number of temperature devices found
-    DeviceAddress tempDeviceAddress; // We'll use this variable to store a found device address
+    int numberOfDevices;              // Number of temperature devices found
+    DeviceAddress tempDeviceAddress;  // We'll use this variable to store a found device address
 
     // function to print a device address
     void printAddress(DeviceAddress deviceAddress) {
         for (uint8_t i = 0; i < 8; i++) {
-            if (deviceAddress[i] < 16)
-                Serial.print("0");
+            if (deviceAddress[i] < 16) Serial.print("0");
             Serial.print(deviceAddress[i], HEX);
         }
     }
@@ -31,7 +30,7 @@ class SensorDallasTemp {
 
     float temperatureByAddr(DeviceAddress deviceAddress) {
         sensors->setWaitForConversion(false);
-        sensors->requestTemperatures(); // Send the command to get temperatures
+        sensors->requestTemperatures();  // Send the command to get temperatures
         pinMode(ONE_WIRE_BUS, OUTPUT);
         digitalWrite(ONE_WIRE_BUS, HIGH);
         delay(750);
@@ -47,8 +46,9 @@ class SensorDallasTemp {
         return tempC;
     }
 
-  public:
-    SensorDallasTemp() {
+   public:
+    SensorDallasTemp() {}
+    void init() {
         oneWire = new OneWire(ONE_WIRE_BUS);
         sensors = new DallasTemperature(oneWire);
 
@@ -94,16 +94,15 @@ class SensorDallasTemp {
 
     DeviceAddress addr2 = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
 
-// 28 61 64 11 8D 96 46 D3
+    // 28 61 64 11 8D 96 46 D3
     DeviceAddress addrChelIn1 = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x46, 0xD3};
-// 28 61 64 11 BD D8 52 B6
+    // 28 61 64 11 BD D8 52 B6
     DeviceAddress addrChelIn2 = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
-// 28 8C 99 3B 04 00 00 8F
+    // 28 8C 99 3B 04 00 00 8F
     DeviceAddress addrChelOut = {0x28, 0x8C, 0x99, 0x3B, 0x04, 0x00, 0x00, 0x8F};
 
     // 28 44 04 A7 33 14 01 34
     DeviceAddress addrDino = {0x28, 0x44, 0x04, 0xA7, 0x33, 0x14, 0x01, 0x34};
-
 
     // addrOne // 1 opus
     // addr2 // 2 wave
@@ -116,7 +115,7 @@ class SensorDallasTemp {
 
     float printTemperature2() {
         sensors->setWaitForConversion(false);
-        sensors->requestTemperatures(); // Send the command to get temperatures
+        sensors->requestTemperatures();  // Send the command to get temperatures
         pinMode(ONE_WIRE_BUS, OUTPUT);
         digitalWrite(ONE_WIRE_BUS, HIGH);
         delay(750);

@@ -1,22 +1,23 @@
 #ifndef OLED_h
 #define OLED_h
 
+#include "MeteoLog.h"
 #include "SSD1306.h"
-#include "images.h"
 #include "SensorsData.h"
 #include "fonts.h"
-#include "MeteoLog.h"
+#include "images.h"
 
 #define countof(a) (sizeof(a) / sizeof(a[0]))
 
 class OLED {
-  private:
+   private:
     SSD1306 *display;
     MeteoLog *meteoLog;
 
-  public:
+   public:
     bool alwaysOn;
-    OLED(MeteoLog *meteoLog) {
+    OLED() {}
+    void init(MeteoLog *meteoLog) {
         this->meteoLog = meteoLog;
         // display = new SSD1306(0x3C, D3, D5);
         // display->init();
