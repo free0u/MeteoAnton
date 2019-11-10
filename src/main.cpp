@@ -1,21 +1,21 @@
+#include <ESP8266HTTPClient.h>
+#include "EspSaveCrash.h"
 #include "FS.h"
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
-#include <ESP8266HTTPClient.h>
-#include "EspSaveCrash.h"
 
 #include "BME280.h"
+#include "CO2SensorSenseAir.h"
 #include "DHTSensor.h"
 #include "Led.h"
 #include "MeteoLog.h"
 #include "OLED.h"
-#include "SensorDallasTemp.h"
-#include "SensorsData.h"
-#include "Timing.h"
-#include "CO2SensorSenseAir.h"
 #include "OLEDStates.h"
-#include "Timeouts.h"
+#include "SensorDallasTemp.h"
 #include "SensorsCache.h"
+#include "SensorsData.h"
+#include "Timeouts.h"
+#include "Timing.h"
 
 // Call to ESpressif SDK
 extern "C" {
@@ -41,7 +41,6 @@ SensorsData *sensorsData;
 long bootTime;
 
 void setup() {
-
     Serial.begin(115200);
     // SaveCrash.clear();
     // SaveCrash.print();
@@ -85,7 +84,7 @@ void setup() {
 
     // DHT11
     oled->showMessage("DHT22 init...");
-    dht = new DHTSensor(D3); // 1 opus
+    dht = new DHTSensor(D3);  // 1 opus
     // dht = new DHTSensor(D1); // 2 wave
     oled->showMessage("DHT22 init... Done");
 
@@ -163,7 +162,6 @@ void tryUpdateSensors() {
         if (!isnan(dsTempOut)) {
             sensorsData->dsTempOut.set(dsTempOut, timestampNow);
         }
-        
 
         sensorsData->uptime.set(millis() / 1000 / 60, timestampNow);
     }
@@ -228,7 +226,7 @@ int sendDataApi() {
 
     oled->showMessage("Sending data...");
 
-    http.begin("***REMOVED***chel");
+    http.begin("***REMOVED***dino");
     http.setTimeout(10000);
     http.addHeader("Sensors-Names", sensorsData->sensorsNames);
     int statusCode = http.POST(sensorsData->serialize());
@@ -263,6 +261,13 @@ bool is_calib = false;
 int cnt2 = 0;
 
 void loop() {
+    // int buttonState2 = digitalRead(BUTTON);
+
+    // Serial.println(String(cnt2++) + " test");
+    // Serial.println("button: " + String(buttonState2));
+    // delay(1000);
+    // return;
+
     delay(100);
     otaUpdate.handle();
     tryUpdateSensors();
@@ -303,105 +308,19 @@ void loop() {
         wifiConfig->startPortal();
         led.off();
     }
+}
 
-    // if (!is_calib && millis() - stt > 30000) {
-    //     stt = millis();
-    //     Serial.println("\n\n\n\n\n\n\n");
-    //     Serial.println("Run calibration");
-    //     Serial.println("\n\n\n\n\n\n\n");
-    //     if (co21->calib()) {
-    //         Serial.println("co21 calibrated");
-    //         is_calib = true;
-    //     }
-    //     if (co22->calib()) {
-    //         Serial.println("co22 calibrated");
-    //         is_calib = true;
-    //     }
-    // }
+bool checkTime(long &ts, long delay) {
+    if (millis() - ts > delay) {
+        ts = millis();
+        return true;
+    }
+    return false;
+}
 
-    // if (millis() - timeDataSend > SERVER_SENDING_TIMEOUT) {
-    //     // if (millis() - timeDataSend > 5000) {
-    //     timeDataSend = millis();
-    //     if (now() > 1542929780) {
-    //         sendDataApi();
-    //         Serial.println("sent");
-    //     }
-    // }
-
-    // if (millis() - stt > 60 * 1000 && !is_calib) {
-    //     // co2->setZero();
-    //     // is_calib = true;
-    // }
-
-    // if (millis() - rtcTimeUpdate > RTC_TIME_UPDATE_TIMEOUT) {
-    //     rtcTimeUpdate = millis();
-    //     timing->updateRtc();
-    //     meteoLog->add("RTC updated: " + timing->getRtcDateTime());
-    // }
-
-    // if (millis() - timeDataSend > SERVER_SENDING_TIMEOUT) {
-    //     timeDataSend = millis();
-
-    //     if (cache->empty()) {
-    //         int statusCode = -1;
-    //         if (wifiOn()) {
-    //             statusCode = sendDataApi();
-    //         }
-    //         if (statusCode != 200) {
-    //             cache->add(sensorsData);
-    //         }
-    //     } else {
-    //         cache->add(sensorsData);
-    //         if (wifiOn()) {
-    //             cache->sendCache(sensorsData->sensorsNames);
-    //         }
-    //     }
-    // }
-
-    // if (!oled->alwaysOn && millis() - oledStateChangedTime > 7000) {
-    //     oledState = EMPTY;
-    // }
-
-    // if (oledState == SENSORS) {
-    //     oled->displaySensorsData(sensorsData);
-    // } else if (oledState == NETWORK) {
-    //     oled->displayIp(NTP.getUptimeString(), timing->getRtcDateTime(), NTP.getTimeStr(),
-    // cache->getCachedCount());
-    // } else if (oledState == LOG) {
-    //     oled->displayLog();
-    // } else if (oledState == OLED_AUTO_OFF_SWITCH) {
-    //     oled->displayAutoOffSwitch();
-    //     if (millis() - oledStateChangedTime > 5000) {
-    //         oled->alwaysOn = !oled->alwaysOn;
-    //         oledState = SENSORS;
-    //     }
-    // } else if (oledState == WIFI_CHANGE) {
-    //     oled->displayWifiChange();
-    //     if (millis() - oledStateChangedTime > 5000) {
-    //         meteoLog->add("Changing wifi network");
-    //         co2->detachCo2Interrupt();
-    //         wifiConfig->startPortal();
-    //         co2->attachCo2Interrupt();
-    //         oledState = SENSORS;
-    //     }
-    // } else if (oledState == EMPTY) {
-    //     oled->displayEmpty();
-    // }
-
-    // delay(100);
-    // int buttonState = digitalRead(BUTTON);
-    // if (buttonState == HIGH) {
-    //     if (millis() - timeButtonPress > 500) {
-    //         timeButtonPress = millis();
-    //         oledStateChangedTime = millis();
-
-    //         oledState = (oledState + 1) % oledStateNum;
-    //         if (oledState == WIFI_CHANGE && millis() > 60 * 1000) { // 2 min
-    //             oledState = (oledState + 1) % oledStateNum;
-    //         }
-    //         if (oledState == EMPTY) {
-    //             oledState = (oledState + 1) % oledStateNum;
-    //         }
-    //     }
-    // }
+void example() {
+    long ts = 0;
+    if (checkTime(ts, 800)) {
+        // do something
+    }
 }

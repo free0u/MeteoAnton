@@ -61,7 +61,7 @@ class SensorsCache {
         Serial.println("Sending data...");
 
         HTTPClient http;
-        http.begin("***REMOVED***chel");
+        http.begin("***REMOVED***dino");
         http.setTimeout(10000);
         http.addHeader("Sensors-Names", sensorsNames);
         int statusCode = http.sendRequest("POST", &dataFile, dataFile.size());

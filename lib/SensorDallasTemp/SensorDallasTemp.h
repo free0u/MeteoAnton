@@ -101,10 +101,14 @@ class SensorDallasTemp {
 // 28 8C 99 3B 04 00 00 8F
     DeviceAddress addrChelOut = {0x28, 0x8C, 0x99, 0x3B, 0x04, 0x00, 0x00, 0x8F};
 
+    // 28 44 04 A7 33 14 01 34
+    DeviceAddress addrDino = {0x28, 0x44, 0x04, 0xA7, 0x33, 0x14, 0x01, 0x34};
+
+
     // addrOne // 1 opus
     // addr2 // 2 wave
     // addrChelIn1, addrChelIn1, // chel
-    float temperatureOne() { return temperatureByAddr(addrChelIn1); }
+    float temperatureOne() { return temperatureByAddr(addrDino); }
 
     float temperatureTwo() { return temperatureByAddr(addrChelIn2); }
 
