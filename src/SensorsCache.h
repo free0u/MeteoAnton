@@ -33,7 +33,7 @@ class SensorsCache {
         return SPIFFS.remove("/data.json");
     }
 
-    bool add(SensorsData *data) {
+    bool add(SensorsData &data) {
         File dataFile = SPIFFS.open("/data.json", "a");
         if (!dataFile) {
             Serial.println("Failed to open config file for writing");
@@ -44,7 +44,7 @@ class SensorsCache {
             return false;
         }
 
-        dataFile.print(data->serialize());
+        dataFile.print(data.serialize());
         dataFile.print("_");
         cacheIsEmpty = false;
         cachedCount++;

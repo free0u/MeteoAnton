@@ -2,6 +2,7 @@
 #define SensorsData_h
 
 #include <Time.h>
+#include "DevicesConfig.h"
 #include "Timeouts.h"
 
 class Sensor {
@@ -20,8 +21,10 @@ class Sensor {
     }
 
     void set(float v, long t) {
-        value = v;
-        ts = t;
+        if (!isnan(v)) {
+            value = v;
+            ts = t;
+        }
     }
 
     float getIfUpdated() {
@@ -42,49 +45,63 @@ class Sensor {
 
 class SensorsData {
    private:
-    static const int SENSORS_COUNT = 6;
-    Sensor *sensors[SENSORS_COUNT] = {&dsTempIn1, &dsTempIn2, &dsTempOut, &dhtHum, &co2, &uptime};
+    // static const int SENSORS_COUNT = 7;
+    // Sensor* sensors[SENSORS_COUNT] = {&dsTempIn1, &dsTempIn2, &dsTempOut, &dhtHum, &co2, &uptime, &buildVersion};
+    int sensorsCount;
 
     String getSensorsNames() {
         String res = "";
-        for (int i = 0; i < SENSORS_COUNT; i++) {
+        for (int i = 0; i < sensorsCount; i++) {
             if (i > 0) {
                 res += ';';
             }
-            res += sensors[i]->getName();
+            res += sensors[i].getName();
         }
         return res;
     }
 
    public:
-    Sensor co2;
-    Sensor uptime;
+    Sensor* sensors;
+    // Sensor co2;
+    // Sensor uptime;
+    // Sensor buildVersion;
 
-    Sensor dsTempIn1;
-    Sensor dsTempIn2;
-    Sensor dsTempOut;
-    Sensor dhtHum;
-    Sensor bmeHum;
+    // Sensor dsTempIn1;
+    // Sensor dsTempIn2;
+    // Sensor dsTempOut;
+    // Sensor dhtHum;
+    // Sensor bmeHum;
     String sensorsNames;
 
     SensorsData() {}
+
+    void init(SensorConfig* sensorsConfig, int count) {
+        this->sensorsCount = count;
+        sensors = new Sensor[count];
+        for (int i = 0; i < count; i++) {
+            sensors[i].init(sensorsConfig[i].field_name);
+        }
+        sensorsNames = getSensorsNames();
+    }
+
     void init() {
-        dsTempIn1.init("temp_in");
-        dsTempIn2.init("temp_in_bak");
-        dsTempOut.init("temp_out");
-        dhtHum.init("hum_in");
-        co2.init("co2");
-        uptime.init("uptime");
+        // dsTempIn1.init("temp_in");
+        // dsTempIn2.init("temp_in_bak");
+        // dsTempOut.init("temp_out");
+        // dhtHum.init("hum_in");
+        // co2.init("co2");
+        // uptime.init("uptime");
+        // buildVersion.init("build_version");
         sensorsNames = getSensorsNames();
     }
 
     String serialize() {
         long timeNow = now();
         String res = String(timeNow);
-        for (int i = 0; i < SENSORS_COUNT; i++) {
-            float value = sensors[i]->getIfUpdated();
+        for (int i = 0; i < sensorsCount; i++) {
+            float value = sensors[i].getIfUpdated();
             if (!isnan(value)) {
-                long ts = sensors[i]->getTime();
+                long ts = sensors[i].getTime();
                 res += ';';
                 res += String(value);
                 res += ';';

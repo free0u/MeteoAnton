@@ -2,7 +2,7 @@
 #include <OneWire.h>
 // #include <HardwareSerial.h>
 
-#define ONE_WIRE_BUS D6  // 1 opus
+// #define ONE_WIRE_BUS D6  // 1 opus
 // #define ONE_WIRE_BUS D6 // 2 wave
 #define TEMPERATURE_PRECISION 9
 
@@ -10,7 +10,7 @@ class SensorDallasTemp {
    private:
     OneWire *oneWire;
     DallasTemperature *sensors;
-
+    int pin = -1;
     int numberOfDevices;              // Number of temperature devices found
     DeviceAddress tempDeviceAddress;  // We'll use this variable to store a found device address
 
@@ -31,8 +31,8 @@ class SensorDallasTemp {
     float temperatureByAddr(DeviceAddress deviceAddress) {
         sensors->setWaitForConversion(false);
         sensors->requestTemperatures();  // Send the command to get temperatures
-        pinMode(ONE_WIRE_BUS, OUTPUT);
-        digitalWrite(ONE_WIRE_BUS, HIGH);
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, HIGH);
         delay(750);
 
         float tempC = sensors->getTempC(deviceAddress);
@@ -48,8 +48,13 @@ class SensorDallasTemp {
 
    public:
     SensorDallasTemp() {}
-    void init() {
-        oneWire = new OneWire(ONE_WIRE_BUS);
+    void init(int pin) {
+        if (this->pin != -1) {
+            return;
+        }
+        this->pin = pin;
+
+        oneWire = new OneWire(pin);
         sensors = new DallasTemperature(oneWire);
 
         Serial.println("Dallas Temperature IC Control Library Demo");
@@ -107,6 +112,9 @@ class SensorDallasTemp {
     // addrOne // 1 opus
     // addr2 // 2 wave
     // addrChelIn1, addrChelIn1, // chel
+
+    float getTemp(DeviceAddress deviceAddress) { return temperatureByAddr(deviceAddress); }
+
     float temperatureOne() { return temperatureByAddr(addrDino); }
 
     float temperatureTwo() { return temperatureByAddr(addrChelIn2); }
@@ -116,8 +124,8 @@ class SensorDallasTemp {
     float printTemperature2() {
         sensors->setWaitForConversion(false);
         sensors->requestTemperatures();  // Send the command to get temperatures
-        pinMode(ONE_WIRE_BUS, OUTPUT);
-        digitalWrite(ONE_WIRE_BUS, HIGH);
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, HIGH);
         delay(750);
         for (int i = 0; i < numberOfDevices; i++) {
             if (sensors->getAddress(tempDeviceAddress, i)) {

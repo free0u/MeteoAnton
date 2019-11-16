@@ -25,6 +25,9 @@ class MeteoLog {
         firstMessageInd++;
         firstMessageInd %= NUM;
     }
+    void add(String a, String b) { add(a + b); }
+    void add(String a, String b, String c) { add(a + b + c); }
+    void add(String a, String b, String c, String d) { add(a + b + c + d); }
     String get(int ind) {
         ind = (firstMessageInd + ind) % NUM;
         return messages[ind];
