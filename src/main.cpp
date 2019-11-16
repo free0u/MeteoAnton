@@ -157,7 +157,7 @@ bool checkTime(long& ts, long delay) {
 }
 
 void tryUpdateSensors() {
-    float dsTemp;
+    float value;
     float dsTempIn1;
     float dsTempIn2;
     float dsTempOut;
@@ -183,8 +183,8 @@ void tryUpdateSensors() {
                     sensorData.set(ESP.getFreeHeap(), now());
                     break;
                 case DALLAS_SENSOR:
-                    dsTemp = temp.getTemp(sensorConfig.address);
-                    sensorData.set(dsTemp, now());
+                    value = temp.getTemp(sensorConfig.address);
+                    sensorData.set(value, now());
                     break;
                 default:;
             }
