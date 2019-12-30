@@ -5,9 +5,12 @@
 #include "OTAUpdate.h"
 #include "WiFiConfig.h"
 
+#include "ESP8266httpUpdate.h"
+
 #include "CO2SensorSenseAir.h"
 #include "DHTSensor.h"
 
+#include "BME280.h"
 #include "Led.h"
 #include "MeteoLog.h"
 #include "SensorDallasTemp.h"
@@ -34,6 +37,7 @@ MeteoLog meteoLog;
 Led led;
 Timing timing;
 CO2SensorSenseAir co2;
+BME280 bme;
 
 SensorsCache cache;
 SensorsData sensorsData;
@@ -44,21 +48,77 @@ long* sensorsUpdateTime;
 
 void initSensors();
 
+void processInternetUpdate(String const& device, String const& version) {
+    ESPhttpUpdate.setLedPin(D4, LOW);
+    t_httpUpdate_return ret =
+        ESPhttpUpdate.update("***REMOVED***" + device + "&version=" + version);
+    switch (ret) {
+        case HTTP_UPDATE_FAILED:
+            meteoLog.add("[update] Update failed.");
+            Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(),
+                          ESPhttpUpdate.getLastErrorString().c_str());
+            break;
+        case HTTP_UPDATE_NO_UPDATES:
+            meteoLog.add("[update] Update no Update.");
+            break;
+        case HTTP_UPDATE_OK:
+            meteoLog.add("[update] Update ok.");  // may not be called since we reboot the ESP
+            break;
+    }
+}
+
+void recover() {
+    led.on();
+    delay(2000);
+    Serial.println("Recover start");
+
+    bool pressed = true;
+    for (int i = 0; i < 10; i++) {
+        int buttonState = digitalRead(BUTTON);
+        Serial.println("button: " + String(buttonState));
+        if (buttonState == HIGH) {
+            pressed = false;
+            break;
+        }
+        delay(200);
+    }
+    led.off();
+
+    if (pressed) {
+        for (int i = 0; i < 10; i++) {
+            led.change();
+            delay(200);
+        }
+        Serial.println("Starting wifi portal...");
+        // wifiConfig.startPortal();
+    }
+    led.off();
+
+    // led.on();
+    ESPhttpUpdate.update("***REMOVED***" + String(ESP.getChipId()));
+    // led.off();
+    Serial.println("Recover end");
+}
+
 void setup() {
+    Serial.begin(115200);
+
+    return;
+
+    pinMode(BUTTON, INPUT_PULLUP);
+    led.off();
+
+    recover();
+
     int chipId = ESP.getChipId();
-    Serial.println(chipId);
+    Serial.printf("\n%d", chipId);
 
     config = getDeviceConfigById(chipId);
 
-    Serial.begin(115200);
     // SaveCrash.clear();
     // SaveCrash.print();
 
     bootTime = now();
-
-    // setup pins
-    // pinMode(BUTTON, INPUT);
-    pinMode(BUTTON, INPUT_PULLUP);
 
     // setup log
     meteoLog.init();
@@ -69,12 +129,13 @@ void setup() {
     meteoLog.add("Connecting to WiFi...");
     if (wifiConfig.connect()) {
         led.off();
+        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
     }
     meteoLog.add("WiFi connected");
 
     // configure and start OTA update server
     meteoLog.add("OTA server init...");
-    otaUpdate.setup();
+    otaUpdate.init(config.deviceName);
     meteoLog.add("OTA server init... Done");
 
     // initSensors
@@ -90,15 +151,17 @@ void setup() {
     meteoLog.add("SPIFFS init... Done");
 
     meteoLog.add("Cache init...");
-    cache.init();
+    cache.init(config.sensorsApiUrl);
     meteoLog.add("Cache init... Done");
 
     // change MAC
     meteoLog.add(" *********** OLD ESP8266 MAC: *********** ");
     meteoLog.add(String(WiFi.macAddress()));
 
-    uint8_t mac[6]{0xA8, 0xD8, 0xB4, 0x1D, 0xAA, 0xCE};
-    // wifi_set_macaddr(0, const_cast<uint8 *>(mac));
+    uint8_t mac[6]{0xA8, 0xD8, 0xB4, 0x1D, 0xA4, 0xCE};
+    if (config.deviceName == "wave") {
+        wifi_set_macaddr(0, const_cast<uint8*>(mac));
+    }
 
     meteoLog.add(" *********** NEW ESP8266 MAC:  *********** ");
     meteoLog.add(String(WiFi.macAddress()));
@@ -117,19 +180,24 @@ void initSensors() {
         switch (sensorConfig.type) {
             case DALLAS_SENSOR:  // DS18B20 temperature
                 meteoLog.add("DS18B20 init...");
-                temp.init(sensorConfig.pin1);
+                temp.init(sensorConfig.pin1, &meteoLog);
                 meteoLog.add("DS18B20 init... Done");
                 break;
             case DHT_SENSOR:
-                // meteoLog.add("DHT22 init...");
-                // dht.init(D3);  // 1 opus
-                // dht = new DHTSensor(D1); // 2 wave
-                // meteoLog.add("DHT22 init... Done");
+                meteoLog.add("DHT22 init...");
+                dht.init(sensorConfig.pin1);
+                meteoLog.add("DHT22 init... Done");
                 break;
             case CO2_SENSEAIR_SENSOR:
-                // meteoLog.add("CO2 init...");
-                // co2.init(D7, D8);
-                // meteoLog.add("CO2 init... Done");
+                meteoLog.add("CO2 init...");
+                co2.init(sensorConfig.pin1, sensorConfig.pin2);
+                meteoLog.add("CO2 init... Done");
+                break;
+            case BME_SENSOR:
+                meteoLog.add("BME280 init...");
+                Wire.begin(sensorConfig.pin1, sensorConfig.pin2);
+                bme.init(sensorConfig.address[0]);
+                meteoLog.add("BME280 init... Done");
                 break;
             default:;
         }
@@ -156,95 +224,40 @@ bool checkTime(long& ts, long delay) {
     return false;
 }
 
-void tryUpdateSensors() {
-    float value;
-    float dsTempIn1;
-    float dsTempIn2;
-    float dsTempOut;
-    float dhtHum;
-    long timestampNow = -1;
+float readSensor(SensorConfig& sensorConfig) {
+    switch (sensorConfig.type) {
+        case UPTIME_SENSOR:
+            return millis() / 1000 / 60;
+        case BUILD_VERSION_SENSOR:
+            return BUILD_VERSION;
+        case FIRMWARE_VERSION_SENSOR:
+            return FIRMWARE_VERSION;
+        case FREE_HEAP_SENSOR:
+            return ESP.getFreeHeap();
+        case DALLAS_SENSOR:
+            return temp.getTemp(sensorConfig.address);
+        case BME_SENSOR:
+            return bme.humidity();
+        case DHT_SENSOR:
+            return dht.humidity();
+        case CO2_SENSEAIR_SENSOR:
+            return co2.read();
+        default:
+            return NAN;
+    }
+}
 
+void tryUpdateSensors() {
     for (int i = 0; i < config.sensorsCount; i++) {
         SensorConfig& sensorConfig = config.sensors[i];
         Sensor& sensorData = sensorsData.sensors[i];
 
         if (checkTime(sensorsUpdateTime[i], sensorConfig.timeout)) {
-            switch (sensorConfig.type) {
-                case UPTIME_SENSOR:
-                    sensorData.set(millis() / 1000 / 60, now());
-                    break;
-                case BUILD_VERSION_SENSOR:
-                    sensorData.set(BUILD_VERSION, now());
-                    break;
-                case FIRMWARE_VERSION_SENSOR:
-                    sensorData.set(FIRMWARE_VERSION, now());
-                    break;
-                case FREE_HEAP_SENSOR:
-                    sensorData.set(ESP.getFreeHeap(), now());
-                    break;
-                case DALLAS_SENSOR:
-                    value = temp.getTemp(sensorConfig.address);
-                    sensorData.set(value, now());
-                    break;
-                default:;
-            }
+            float value = readSensor(sensorConfig);
+            meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.debug_name) + " read: " + value);
+            sensorData.set(value, now());
         }
     }
-
-    if (false && checkTime(sensorsDataUpdated, SENSORS_TIMEOUT)) {
-        meteoLog.add("Reading sensors...");
-        dsTempIn1 = temp.temperatureOne();
-        dsTempIn2 = temp.temperatureTwo();
-        dsTempOut = temp.temperatureThree();
-
-        meteoLog.add("dsTempIn1 " + String(dsTempIn1));
-        meteoLog.add("dsTempIn2 " + String(dsTempIn2));
-        meteoLog.add("dsTempOut " + String(dsTempOut));
-        meteoLog.add("Reading sensors... Done");
-
-        if (timestampNow == -1) {
-            timestampNow = now();
-        }
-
-        if (!isnan(dsTempIn1)) {
-            sensorsData.sensors[0].set(dsTempIn1, timestampNow);
-        }
-        // if (!isnan(dsTempIn2)) {
-        //     sensorsData.dsTempIn2.set(dsTempIn2, timestampNow);
-        // }
-        // if (!isnan(dsTempOut)) {
-        //     sensorsData.dsTempOut.set(dsTempOut, timestampNow);
-        // }
-
-        // sensorsData.sensors[1].set(millis() / 1000 / 60, timestampNow);
-
-        // sensorsData.sensors[2].set(BUILD_VERSION, timestampNow);
-    }
-
-    if (false && checkTime(dhtSensorUpdated, DHT_TIMEOUT)) {
-        dhtHum = dht.humidity();
-        meteoLog.add("dhtHum1 " + String(dhtHum));
-
-        // if (!isnan(dhtHum)) {
-        //     if (timestampNow == -1) {
-        //         timestampNow = now();
-        //     }
-        //     sensorsData.dhtHum.set(dhtHum, timestampNow);
-        // }
-    }
-
-    // if (checkTime(timeScanCo21, config.sensorsReadTimeout)) {
-    //     int co2uart = co2.read();
-
-    //     if (co2uart > 0) {
-    //         if (timestampNow == -1) {
-    //             timestampNow = now();
-    //         }
-    //         sensorsData.co2.set(co2uart, timestampNow);
-    //     }
-
-    //     meteoLog.add("co2 ppm " + String(co2uart));
-    // }
 }
 
 String generateThingspeakPair(int ind, Sensor sensor) {
@@ -280,16 +293,18 @@ int sendDataApi(bool reallySend) {
     meteoLog.add("Sending data...");
 
     if (reallySend) {
-        http.begin("***REMOVED***dino");
+        http.begin(config.sensorsApiUrl);
         http.setTimeout(10000);
         http.addHeader("Sensors-Names", sensorsData.sensorsNames);
         int statusCode = http.POST(sensorsData.serialize());
-        String payload = http.getString();
-        meteoLog.add("Code: " + String(statusCode));
-        meteoLog.add("Payload: " + payload);
+        if (statusCode != 200) {
+            meteoLog.add("Code: " + String(statusCode));
+            String payload = http.getString();
+            meteoLog.add("Payload: " + payload);
+        }
 
         http.end();
-        meteoLog.add("Sending data complete...");
+        meteoLog.add("Sending data complete");
         return statusCode;
     } else {
         meteoLog.add("Sensors-Names: ", sensorsData.sensorsNames);
@@ -320,7 +335,18 @@ bool is_calib = false;
 
 int cnt2 = 0;
 
+int num = 0;
 void loop() {
+    /*
+    emonlib test
+    */
+
+    num++;
+    Serial.println("hello: " + String(num));
+
+    delay(1000);
+    return;
+
     // int buttonState2 = digitalRead(BUTTON);
 
     // meteoLog.add(String(cnt2++) + " test");
@@ -349,6 +375,11 @@ void loop() {
             //     cache.sendCache(sensorsData.sensorsNames);
             // }
         }
+
+        meteoLog.add("Trying to update firmware...");
+        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
+
+        meteoLog.sendLog(config.deviceName, "***REMOVED***");
     }
 
     int buttonState = digitalRead(BUTTON);

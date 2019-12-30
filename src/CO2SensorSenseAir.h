@@ -43,7 +43,11 @@ class CO2SensorSenseAir {
 
     float read() {
         writeCommand(readCO2);
-        return getValue(response);
+        float ret = getValue(response);
+        if (360 < ret && ret < 2100) {
+            return ret;
+        }
+        return NAN;
     }
 
     // int getABC() {

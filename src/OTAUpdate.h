@@ -7,9 +7,11 @@
 #include <WiFiUdp.h>
 
 class OTAUpdate {
-  public:
-    void setup() {
-        ArduinoOTA.setHostname("NodeMCU-OTA-Dino");
+   public:
+    OTAUpdate() {}
+
+    void init(String deviceTag) {
+        ArduinoOTA.setHostname(String("NodeMCU-free0u-" + deviceTag).c_str());
         ArduinoOTA.setPort(3232);
 
         // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
@@ -19,7 +21,7 @@ class OTAUpdate {
             String type;
             if (ArduinoOTA.getCommand() == U_FLASH)
                 type = "sketch";
-            else // U_SPIFFS
+            else  // U_SPIFFS
                 type = "filesystem";
 
             // NOTE: if updating SPIFFS this would be the place to unmount

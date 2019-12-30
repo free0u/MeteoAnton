@@ -13,13 +13,52 @@ class SensorDallasTemp {
     int pin = -1;
     int numberOfDevices;              // Number of temperature devices found
     DeviceAddress tempDeviceAddress;  // We'll use this variable to store a found device address
+    MeteoLog *meteoLog;
 
-    // function to print a device address
-    void printAddress(DeviceAddress deviceAddress) {
+    String toHex(unsigned long n, uint8_t base) {
+        char buf[8 * sizeof(long) + 1];  // Assumes 8-bit chars plus zero byte.
+        char *str = &buf[sizeof(buf) - 1];
+
+        *str = '\0';
+
+        // prevent crash if called with base == 1
+        if (base < 2) base = 10;
+
+        do {
+            unsigned long m = n;
+            n /= base;
+            char c = m - base * n;
+            *--str = c < 10 ? c + '0' : c + 'A' - 10;
+        } while (n);
+
+        return String(str);
+    }
+
+    String getPrintAddress(DeviceAddress deviceAddress) {
+        String addr = "";
+
+        addr += '{';
         for (uint8_t i = 0; i < 8; i++) {
-            if (deviceAddress[i] < 16) Serial.print("0");
-            Serial.print(deviceAddress[i], HEX);
+            addr += "0x";
+            if (deviceAddress[i] < 16) {
+                addr += "0";
+            }
+
+            addr += toHex(deviceAddress[i], HEX);
+            if (i < 7) {
+                addr += ", ";
+            }
         }
+        addr += "} ";
+
+        for (uint8_t i = 0; i < 8; i++) {
+            if (deviceAddress[i] < 16) {
+                addr += "0";
+            }
+            addr += toHex(deviceAddress[i], HEX);
+        }
+
+        return addr;
     }
 
     float tempIsCorrect(float temp) {
@@ -37,10 +76,8 @@ class SensorDallasTemp {
 
         float tempC = sensors->getTempC(deviceAddress);
         if (!tempIsCorrect(tempC)) {
-            Serial.print("Cant get temp for device ");
-            printAddress(deviceAddress);
-            Serial.print(" is ");
-            Serial.println(tempC);
+            String addr = getPrintAddress(deviceAddress);
+            meteoLog->add(("Cant get temp for device "), addr, " is ", String(tempC));
             return NAN;
         }
         return tempC;
@@ -48,42 +85,36 @@ class SensorDallasTemp {
 
    public:
     SensorDallasTemp() {}
-    void init(int pin) {
+    void init(int pin, MeteoLog *meteoLog) {
         if (this->pin != -1) {
             return;
         }
         this->pin = pin;
+        this->meteoLog = meteoLog;
 
+        meteoLog->add("one wire pin " + String(pin));
         oneWire = new OneWire(pin);
         sensors = new DallasTemperature(oneWire);
 
-        Serial.println("Dallas Temperature IC Control Library Demo");
+        meteoLog->add("Dallas Temperature IC Control Library Demo");
         sensors->begin();
         numberOfDevices = sensors->getDeviceCount();
 
-        Serial.print("Locating devices...");
-
-        Serial.print("Found ");
-        Serial.print(numberOfDevices, DEC);
-        Serial.println(" devices.");
+        meteoLog->add("Locating devices...");
+        meteoLog->add("Found ", String(numberOfDevices), " devices.");
 
         // Loop through each device, print out address
         for (int i = 0; i < numberOfDevices; i++) {
             // Search the wire for address
             if (sensors->getAddress(tempDeviceAddress, i)) {
-                Serial.print("Found device ");
-                Serial.print(i, DEC);
-                Serial.print(" with address: ");
-                printAddress(tempDeviceAddress);
-                Serial.println();
+                String addr = getPrintAddress(tempDeviceAddress);
+                meteoLog->add("Found device ", String(i), " with address: ", addr);
 
-                Serial.print("Resolution actually set to: ");
-                Serial.print(sensors->getResolution(tempDeviceAddress), DEC);
-                Serial.println();
+                int resolution = sensors->getResolution(tempDeviceAddress);
+                meteoLog->add("Resolution actually set to: ", String(resolution));
             } else {
-                Serial.print("Found ghost device at ");
-                Serial.print(i, DEC);
-                Serial.print(" but could not detect address. Check power and cabling");
+                meteoLog->add("Found ghost device at ", String(i),
+                              " but could not detect address. Check power and cabling");
             }
         }
     }
@@ -130,12 +161,8 @@ class SensorDallasTemp {
         for (int i = 0; i < numberOfDevices; i++) {
             if (sensors->getAddress(tempDeviceAddress, i)) {
                 float tempC = sensors->getTempC(tempDeviceAddress);
-                Serial.print("DS18 Temp C: ");
-                Serial.print(tempC);
-
-                Serial.print(" for device: ");
-                printAddress(tempDeviceAddress);
-                Serial.println();
+                String addr = getPrintAddress(tempDeviceAddress);
+                meteoLog->add("DS18B20 Temp C: ", String(tempC), " for device: ", addr);
 
                 return tempC;
             }

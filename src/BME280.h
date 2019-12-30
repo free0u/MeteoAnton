@@ -6,16 +6,15 @@
 #define SEALEVELPRESSURE_HPA (1013.25)
 
 class BME280 {
-  private:
+   private:
     Adafruit_BME280 bme;
 
-  public:
-    BME280() {
-        Serial.println("BME280 begin");
-        if (!bme.begin(0x76)) {
+   public:
+    BME280() {}
+    void init(uint8_t addr) {
+        if (!bme.begin(addr)) {
             Serial.println("Could not find a valid BME280 sensor, check wiring!");
         }
-        Serial.println("BME280 end");
     }
     float temperature() { return bme.readTemperature(); }
     float humidity() { return bme.readHumidity(); }

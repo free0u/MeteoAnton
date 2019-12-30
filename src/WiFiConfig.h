@@ -7,13 +7,14 @@
 #include <WiFiManager.h>
 
 class WiFiConfig {
-  private:
+   private:
     WiFiManager wifiManager;
 
-  public:
+   public:
     WiFiConfig() {}
 
     bool connect() {
+        Serial.println("Trying to connect: " + WiFi.SSID());
         WiFi.mode(WIFI_STA);
         WiFi.begin();
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {

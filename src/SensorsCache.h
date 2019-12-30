@@ -8,10 +8,12 @@ class SensorsCache {
     bool cacheIsEmpty;
     int cachedCount;
     static const int ONE_MEASURE_LEN = 70;
+    String sensorsApiUrl;
 
    public:
     SensorsCache() {}
-    void init() {
+    void init(String url) {
+        this->sensorsApiUrl = url;
         if (SPIFFS.exists("/data.json")) {
             File file = SPIFFS.open("/data.json", "r");
             int sz = file.size();
@@ -62,7 +64,7 @@ class SensorsCache {
         Serial.println("Sending data...");
 
         HTTPClient http;
-        http.begin("***REMOVED***dino");
+        http.begin(sensorsApiUrl);
         http.setTimeout(10000);
         http.addHeader("Sensors-Names", sensorsNames);
         int statusCode = http.sendRequest("POST", &dataFile, dataFile.size());
