@@ -16,7 +16,7 @@
 #include "MeteoLog.h"
 #include "OTAUpdate.h"
 #include "RxTx433.h"
-#include "SensorDallasTemp.h"
+// #include "SensorDallasTemp.h"
 #include "SensorsCache.h"
 #include "SensorsData.h"
 #include "Timeouts.h"
@@ -24,6 +24,7 @@
 #include "Timing2.h"
 #include "WaterSensorStorage.h"
 #include "WiFiConfig.h"
+#include "sensors/SensorDallasTemp/SensorDallasTemp.h"
 #define WEBSERVER_H
 #include <ESPAsyncWebServer.h>
 AsyncWebServer server(80);
@@ -130,6 +131,7 @@ String getCrash() {
 }
 
 String makeCrash() {
+    // cppcheck-suppress1 unusedVariable
     int ssss = 1 / 0;
     strcpy(_debugOutputBufferForCrash, "crash it");
     return "crashed";
