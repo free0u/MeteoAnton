@@ -24,6 +24,7 @@
 #include "Timing2.h"
 #include "WaterSensorStorage.h"
 #include "WiFiConfig.h"
+#include "helpers/CheckTime.h"
 #include "sensors/SensorDallasTemp/SensorDallasTemp.h"
 #define WEBSERVER_H
 #include <ESPAsyncWebServer.h>
@@ -51,6 +52,7 @@ RxTx433 rxtx;
 BME280 bme;
 ElectroSensorStorage electroSensorStorage;
 WaterSensorStorage waterSensorStorage;
+CheckTime checkTimeClass;
 
 bool hasReceiver433 = false;
 bool hasTransmitter433 = false;
@@ -688,7 +690,8 @@ void loop() {
     timeTestDiffCheck("another sensors");
 
     // if (checkTime(timeDataSend, SERVER_SENDING_TIMEOUT)) {
-    if (checkTime(timeDataSend, 10000)) {
+    if (checkTimeClass.checkSendSensorToServer(10000)) {
+    // if (checkTime(timeDataSend, 10000)) {
         // if (hasReceiver433) {
         //     uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
         //     uint8_t buflen = sizeof(buf);
