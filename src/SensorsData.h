@@ -1,7 +1,7 @@
 #ifndef SensorsData_h
 #define SensorsData_h
 
-#include <Time.h>
+#include <TimeLib.h>
 #include "DevicesConfig.h"
 #include "Timeouts.h"
 
