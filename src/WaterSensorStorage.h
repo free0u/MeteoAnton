@@ -1,6 +1,8 @@
 #ifndef WATER_SENSOR_STORAGE_H
 #define WATER_SENSOR_STORAGE_H
 
+#include "LittleFS.h"
+
 class WaterSensorStorage {
    public:
     WaterSensorStorage() {}

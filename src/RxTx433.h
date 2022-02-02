@@ -3,7 +3,7 @@
 
 #include <RH_ASK.h>
 #ifdef RH_HAVE_HARDWARE_SPI
-#include <SPI.h> // Not actually used but needed to compile
+#include <SPI.h>  // Not actually used but needed to compile
 #endif
 
 class RxTx433 {
@@ -28,7 +28,7 @@ class RxTx433 {
         driver->waitPacketSent();
     }
 
-    bool receive(uint8_t* buf, uint8_t* len) {
+    bool receive(uint8_t *buf, uint8_t *len) {
         // return driver->recv(buf, len);
         Serial.println("ERROR 433");
         return false;

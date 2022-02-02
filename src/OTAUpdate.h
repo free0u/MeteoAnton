@@ -30,7 +30,7 @@ class OTAUpdate {
             // SPIFFS.end();
         });
         ArduinoOTA.onEnd([]() {
-            Serial.println("\nEnd"); 
+            Serial.println("\nEnd");
             // SPIFFS.begin();
         });
         ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {

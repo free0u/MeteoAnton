@@ -6,6 +6,7 @@
 */
 
 #include "MHZ19_uart.h"
+
 #include "Arduino.h"
 
 #define WAIT_READ_TIMES 100
@@ -30,8 +31,7 @@ void MHZ19_uart::setAutoCalibration(boolean autocalib) { writeCommand(autocalib 
 void MHZ19_uart::calibrateZero() { writeCommand(zerocalib); }
 
 void MHZ19_uart::calibrateSpan(int ppm) {
-    if (ppm < 1000)
-        return;
+    if (ppm < 1000) return;
 
     uint8_t com[MHZ19_uart::REQUEST_CNT];
     for (int i = 0; i < MHZ19_uart::REQUEST_CNT; i++) {
@@ -132,16 +132,16 @@ int MHZ19_uart::getSerialData(MHZ19_DATA flg) {
     }
 
     switch (flg) {
-    case MHZ19_DATA::TEMPERATURE:
-        return co2temp;
-        break;
-    case MHZ19_DATA::STAT:
-        return co2status;
-        break;
-    case MHZ19_DATA::PPM:
-    default:
-        return co2;
-        break;
+        case MHZ19_DATA::TEMPERATURE:
+            return co2temp;
+            break;
+        case MHZ19_DATA::STAT:
+            return co2status;
+            break;
+        case MHZ19_DATA::PPM:
+        default:
+            return co2;
+            break;
     }
 }
 

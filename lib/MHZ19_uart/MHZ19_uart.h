@@ -14,7 +14,7 @@
 enum MHZ19_DATA { PPM, TEMPERATURE, STAT };
 
 class MHZ19_uart {
-  public:
+   public:
     MHZ19_uart();
     MHZ19_uart(int rx, int tx);
     virtual ~MHZ19_uart();
@@ -30,11 +30,11 @@ class MHZ19_uart {
 
     boolean isWarming();
 
-  protected:
+   protected:
     void writeCommand(uint8_t com[]);
     void writeCommand(uint8_t com[], uint8_t response[]);
 
-  private:
+   private:
     SoftwareSerial *hserial;
 
     uint8_t mhz19_checksum(uint8_t com[]);

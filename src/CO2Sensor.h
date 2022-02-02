@@ -31,12 +31,12 @@ void PWM_ISR() {
 }
 
 class CO2Sensor {
-  private:
-    const int rx_pin = D1; // Serial rx pin no
-    const int tx_pin = D2; // Serial tx pin no
+   private:
+    const int rx_pin = D1;  // Serial rx pin no
+    const int tx_pin = D2;  // Serial tx pin no
     MHZ19_uart *mhz19;
 
-  public:
+   public:
     CO2Sensor() {
         prevVal = LOW;
         ppm = 0;

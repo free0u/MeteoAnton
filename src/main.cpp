@@ -1,34 +1,32 @@
 #include <ESP8266HTTPClient.h>
+#include <ESP8266WiFi.h>
+#include <ESPAsyncTCP.h>
 
 #include "BME280.h"
 #include "BuildVersion.h"
 #include "CO2SensorSenseAir.h"
-#include "RxTx433.h"
 #include "DHTSensor.h"
 #include "DevicesConfig.h"
 #include "ESP8266httpUpdate.h"
+#include "ElectroSensorStorage.h"
 #include "EmonLibSensor.h"
 #include "EspSaveCrash.h"
-#include "LittleFS.h"
 #include "Led.h"
+#include "LittleFS.h"
 #include "MeteoLog.h"
 #include "OTAUpdate.h"
+#include "RxTx433.h"
 #include "SensorDallasTemp.h"
 #include "SensorsCache.h"
 #include "SensorsData.h"
 #include "Timeouts.h"
 #include "Timing.h"
 #include "Timing2.h"
-#include "WiFiConfig.h"
-#include "ElectroSensorStorage.h"
 #include "WaterSensorStorage.h"
-
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
+#include "WiFiConfig.h"
 #define WEBSERVER_H
 #include <ESPAsyncWebServer.h>
 AsyncWebServer server(80);
-
 
 // Call to ESpressif SDK
 extern "C" {
@@ -57,7 +55,6 @@ bool hasReceiver433 = false;
 bool hasTransmitter433 = false;
 bool hasIrmsSensor = false;
 bool hasWaterSensor = false;
-
 
 SensorsCache cache;
 SensorsData sensorsData;
@@ -123,8 +120,8 @@ void recover() {
 }
 
 EspSaveCrash SaveCrash(0x0010, 0x0400);
-char *_debugOutputBuffer;
-char *_debugOutputBufferForCrash;
+char* _debugOutputBuffer;
+char* _debugOutputBufferForCrash;
 
 String getCrash() {
     strcpy(_debugOutputBuffer, "");
@@ -155,7 +152,7 @@ void setup() {
 
     config = getDeviceConfigById(chipId);
 
-    _debugOutputBuffer = (char *) calloc(2048, sizeof(char));
+    _debugOutputBuffer = (char*)calloc(2048, sizeof(char));
     SaveCrash.print();
     SaveCrash.clear();
 
@@ -172,29 +169,25 @@ void setup() {
     if (wifiConfig.connect()) {
         led.off();
         processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
-        
     }
     meteoLog.add("WiFi connected");
     meteoLog.add("IP address: " + WiFi.localIP().toString());
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         // request->send(200, "text/plain", "123");
-        request->send(200, "text/plain", 
-            "millis: " + String(millis()) + "\n" + 
-            "Sensors-Names: " + sensorsData.sensorsNames + "\n" + 
-            "Sensors: " + sensorsData.serialize());
+        request->send(200, "text/plain",
+                      "millis: " + String(millis()) + "\n" + "Sensors-Names: " + sensorsData.sensorsNames + "\n" +
+                          "Sensors: " + sensorsData.serialize());
     });
 
-    server.on("/crash", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/crash", HTTP_GET, [](AsyncWebServerRequest* request) {
         // request->send(200, "text/plain", "123");
         request->send(200, "text/plain", getCrash());
     });
-    server.on("/clearCrash", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/plain", clearCrash());
-    });
-    server.on("/makeCrash", HTTP_GET, [](AsyncWebServerRequest *request){
-        request->send(200, "text/plain", makeCrash());
-    });
+    server.on("/clearCrash", HTTP_GET,
+              [](AsyncWebServerRequest* request) { request->send(200, "text/plain", clearCrash()); });
+    server.on("/makeCrash", HTTP_GET,
+              [](AsyncWebServerRequest* request) { request->send(200, "text/plain", makeCrash()); });
     server.begin();
 
     // configure and start OTA update server
@@ -209,8 +202,6 @@ void setup() {
     // } else {
     //     meteoLog.add("433 init... Done OK");
     // }
-
-
 
     // NTP and RTC
     meteoLog.add("NTP/RTC init...");
@@ -350,8 +341,6 @@ float irmsSumSpentIntervalSumValue = 0;
 long irmsSumSpentSmallTimestamp = -1e9;
 float irmsSumSpentSmallValue = 0;
 
-
-
 int buttonCount = 0;
 
 bool checkTime(long& ts, long unsigned delay) {
@@ -403,8 +392,6 @@ float readSensor(SensorConfig& sensorConfig) {
     }
 }
 
-
-
 long timeTestDiff;
 bool timeTestDiffCheck(String t) {
     long diff = millis() - timeTestDiff;
@@ -425,13 +412,12 @@ void tryUpdateSensors() {
         //     // сенсор обновляется в другом месте, когда приходит следующий интервал суммирования watt
         // }
 
-        timeTestDiffCheck("before "  + sensorConfig.debug_name);
+        timeTestDiffCheck("before " + sensorConfig.debug_name);
         if (checkTime(sensorsUpdateTime[i], sensorConfig.timeout)) {
             float value = readSensor(sensorConfig);
             meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.debug_name) + " read: " + value);
             sensorData.set(value, now());
-            timeTestDiffCheck("after "  + sensorConfig.debug_name);
-
+            timeTestDiffCheck("after " + sensorConfig.debug_name);
         }
     }
 }
@@ -464,8 +450,6 @@ String generateThingspeakPair(int ind, Sensor sensor) {
 // }
 
 int sendDataApi(bool reallySend) {
-    
-
     meteoLog.add("Sending data...");
 
     if (reallySend) {
@@ -541,8 +525,6 @@ long testButtonWater = -1e9;
 
 int waterButtonState = -1;
 
-
-
 void loop() {
     timeTestDiff = millis();
 
@@ -578,14 +560,12 @@ void loop() {
     emonlib test
     */
 
-
     delay(100);
 
     timeTestDiffCheck("delay");
 
     otaUpdate.handle();
     timeTestDiffCheck("ota handle");
-
 
     long updateSensorStart = millis();
     tryUpdateSensors();
@@ -637,14 +617,14 @@ void loop() {
         long st = millis();
         float power = emonSensor.power();
         long timeWork = millis() - st;
-        
+
         if (ts - irmsSumSpentSmallTimestamp < 6000) {
             // long deltaKw = power - irmsSumSpentSmallValue;
             float avgKw = (power + irmsSumSpentSmallValue) / 2;
             meteoLog.add("IRMSsum avgWatt: " + String(avgKw));
             float kwSpent = avgKw / 60 / 60 * ((ts - irmsSumSpentSmallTimestamp) / 1000.0);
             irmsSumSpentIntervalSumValue += kwSpent;
-            
+
             powerSpent += kwSpent;
 
             // meteoLog.add("IRMSsum deltaKw: " + String(deltaKw));
@@ -654,7 +634,7 @@ void loop() {
         // if (ts - irmsSumSpentIntervalSumTimestamp > 30000 && ts - irmsSumSpentIntervalSumTimestamp < 300000) {
         //     meteoLog.add("IRMSsum sum: " + String(irmsSumSpentIntervalSumValue));
         //     meteoLog.add("IRMSsum sum time: " + String(ts - irmsSumSpentIntervalSumTimestamp));
-            
+
         //     for (int i = 0; i < config.sensorsCount; i++) {
         //         SensorConfig& sensorConfig = config.sensors[i];
         //         Sensor& sensorData = sensorsData.sensors[i];
@@ -667,7 +647,7 @@ void loop() {
         //         meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.debug_name) + " read: " + value);
         //         sensorData.set(value, now());
         //     }
-            
+
         //     irmsSumSpentIntervalSumValue = 0;
         //     irmsSumSpentIntervalSumTimestamp = ts;
         // } else if (ts - irmsSumSpentIntervalSumTimestamp > 300000) {
@@ -681,32 +661,27 @@ void loop() {
         meteoLog.add("IRMSsum, time spent: " + String(timeWork));
     }
 
-
-
     if (hasReceiver433) {
-            uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
-            uint8_t buflen = sizeof(buf);
+        uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
+        uint8_t buflen = sizeof(buf);
 
-            if (rxtx.receive(buf, &buflen)) {
-                meteoLog.add("433 receive length: " + String(buflen));
-                String s;
-                for (int i = 0; i < buflen; i++) {
-                    s += (char)buf[i];
-                }            
-                meteoLog.add("433 receiev: " + s);
-            } else {
-                // meteoLog.add("433 receive nothing");
+        if (rxtx.receive(buf, &buflen)) {
+            meteoLog.add("433 receive length: " + String(buflen));
+            String s;
+            for (int i = 0; i < buflen; i++) {
+                s += (char)buf[i];
             }
+            meteoLog.add("433 receiev: " + s);
+        } else {
+            // meteoLog.add("433 receive nothing");
         }
+    }
 
     if (checkTime(time433Send, 1000) && hasTransmitter433) {
         cnt433++;
         rxtx.send(cnt433, config.deviceName);
         meteoLog.add("433 SENT !!!");
     }
-
-
-
 
     timeTestDiffCheck("another sensors");
 
@@ -721,7 +696,7 @@ void loop() {
         //         String s;
         //         for (int i = 0; i < buflen; i++) {
         //             s += (char)buf[i];
-        //         }            
+        //         }
         //         meteoLog.add("433 receiev: " + s);
         //     } else {
         //         // meteoLog.add("433 receive nothing");
@@ -739,7 +714,6 @@ void loop() {
 
         // if (checkTime(timeDataSend, 5 * 60 * 1000)) {
         // timing.dumpLastNTPSync();
-
 
         timeTestDiffCheck("before beginning send");
         if (cache.empty()) {
@@ -771,7 +745,7 @@ void loop() {
         meteoLog.add("Trying to update firmware...");
         processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
         timeTestDiffCheck("after processInternetUpdate");
-        
+
         meteoLog.sendLog(config.deviceName, "***REMOVED***");
         timeTestDiffCheck("after sendLog");
     }

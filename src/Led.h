@@ -4,10 +4,10 @@
 #define LED D4
 
 class Led {
-  private:
+   private:
     bool ledIsOn = false;
 
-  public:
+   public:
     Led() { pinMode(LED, OUTPUT); }
     void on() {
         // digitalWrite(LED, LOW);

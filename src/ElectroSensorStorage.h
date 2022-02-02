@@ -1,6 +1,8 @@
 #ifndef ELECTRO_SENSOR_STORAGE_H
 #define ELECTRO_SENSOR_STORAGE_H
 
+#include "LittleFS.h"
+
 class ElectroSensorStorage {
    public:
     ElectroSensorStorage() {}

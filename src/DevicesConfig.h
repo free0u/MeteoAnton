@@ -11,16 +11,16 @@ enum SensorType {
     RECEIVER_433,
     IRMS_SENSOR,
     POWER_SENSOR,
-    POWER_SUM, // spend from last point of data
-    POWER_SPENT, // total spend from starting of measuring
-    WATER_SPENT, // total spend  of water from starting of measuring
+    POWER_SUM,    // spend from last point of data
+    POWER_SPENT,  // total spend from starting of measuring
+    WATER_SPENT,  // total spend  of water from starting of measuring
     UPTIME_SENSOR,
     BUILD_VERSION_SENSOR,
     FIRMWARE_VERSION_SENSOR,
     FREE_HEAP_SENSOR,
     RSSI_SENSOR,
-    MAX_LOOP_TIME, // max loop time between sending data, kindo of local maximums
-    UPDATE_SENSORS_TIME // max update sensor time between sending data, kindo of local maximums
+    MAX_LOOP_TIME,       // max loop time between sending data, kindo of local maximums
+    UPDATE_SENSORS_TIME  // max update sensor time between sending data, kindo of local maximums
 };
 
 struct SensorConfig {
@@ -362,12 +362,12 @@ DeviceConfig getOpusConfig() {
     config.logSendTimeout = 58000;
 
     /*
-    13                                         Found device 0 with address: {0x28, 0xB0, 0xF8, 0x75, 0xD0, 0x01, 0x3C, 0x68} 28B0F875D0013C68
-2021-07-09 16:23:49 name:opus type:log 7567#15 Found device 1 with address: {0x28, 0x5C, 0xCF, 0x95, 0xF0, 0x01, 0x3C, 0x34} 285CCF95F0013C34
-2021-07-09 16:23:49 name:opus type:log 7625#17 Found device 2 with address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9
-2021-07-09 16:23:49 name:opus type:log 7698#19 Found device 3 with address: {0x28, 0x47, 0x60, 0x12, 0x33, 0x14, 0x01, 0x73} 2847601233140173
+    13                                         Found device 0 with address: {0x28, 0xB0, 0xF8, 0x75, 0xD0, 0x01, 0x3C,
+0x68} 28B0F875D0013C68 2021-07-09 16:23:49 name:opus type:log 7567#15 Found device 1 with address: {0x28, 0x5C, 0xCF,
+0x95, 0xF0, 0x01, 0x3C, 0x34} 285CCF95F0013C34 2021-07-09 16:23:49 name:opus type:log 7625#17 Found device 2 with
+address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9 2021-07-09 16:23:49 name:opus type:log
+7698#19 Found device 3 with address: {0x28, 0x47, 0x60, 0x12, 0x33, 0x14, 0x01, 0x73} 2847601233140173
     */
-
 
     // DeviceAddress addrTempIn1 = {0x28, 0xEC, 0xBE, 0x26, 0x0A, 0x00, 0x00, 0xB4};
     // DeviceAddress addrTempIn2 = {0x28, 0xAA, 0x7A, 0xB3, 0x1A, 0x13, 0x02, 0x61};
@@ -388,17 +388,13 @@ DeviceConfig getOpusConfig() {
         // buildDallasSensor(D6, addrTempTest1, 10000, "temp_in1", "temp_in1"), // парилка
         // buildDallasSensor(D6, addrTempTest2, 10000, "temp_in2", "temp_in2"),
         // buildDallasSensor(D6, addrTempTest3, 10000, "temp_in3", "temp_in3"),
-        
-        buildDhtSensor(D1, 22, 10000, "hum_in", "hum_in"),
-        buildCo2SenseairSensor(D7, D8, 10000, "co2", "co2"),
-        buildUptimeSensor(10000, "uptime", "uptime"),
-        buildBuildVersionSensor(10000, "build_version", "build_version"),
+
+        buildDhtSensor(D1, 22, 10000, "hum_in", "hum_in"), buildCo2SenseairSensor(D7, D8, 10000, "co2", "co2"),
+        buildUptimeSensor(10000, "uptime", "uptime"), buildBuildVersionSensor(10000, "build_version", "build_version"),
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
-        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
-        buildRssiSensor(10000, "rssi", "rssi"),
+        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"), buildRssiSensor(10000, "rssi", "rssi"),
         buildMaxLoopTimeSensor(10000, "max_loop_time", "max_loop_time"),
-        buildUpdateSensorTimeSensor(10000, "max_update_sensor_time", "max_update_sensor_time")
-    };
+        buildUpdateSensorTimeSensor(10000, "max_update_sensor_time", "max_update_sensor_time")};
     config.sensorsCount = SENSORS_COUNT;
 
     return config;
@@ -507,7 +503,7 @@ DeviceConfig getMoxovichConfig() {
 
     const int SENSORS_COUNT = 7;
     config.sensors = new SensorConfig[SENSORS_COUNT]{
-        buildDallasSensor(D1, addrTempParilka, 10000, "temp_in", "temp_in"), // парилка
+        buildDallasSensor(D1, addrTempParilka, 10000, "temp_in", "temp_in"),  // парилка
         buildDallasSensor(D1, addrTempMoxOut, 10000, "temp_out", "temp_out"),
         buildUptimeSensor(10000, "uptime", "uptime"),
         buildBuildVersionSensor(10000, "build_version", "build_version"),
@@ -531,7 +527,7 @@ DeviceConfig getMoxovichSecondConfig() {
 
     const int SENSORS_COUNT = 6;
     config.sensors = new SensorConfig[SENSORS_COUNT]{
-        buildDallasSensor(D1, addrTempParilka, 10000, "temp_in", "temp_in"), // парилка
+        buildDallasSensor(D1, addrTempParilka, 10000, "temp_in", "temp_in"),  // парилка
         buildUptimeSensor(10000, "uptime", "uptime"),
         buildBuildVersionSensor(10000, "build_version", "build_version"),
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
@@ -562,13 +558,10 @@ DeviceConfig getDimpleConfig() {
         buildPowerSpentSensor(10000, "power_spent", "power_spent"),
 
         buildDallasSensor(D1, addrTempIn1, 10000, "temp_in", "temp_in"),
-        
-        buildUptimeSensor(10000, "uptime", "uptime"),
-        buildBuildVersionSensor(10000, "build_version", "build_version"),
+
+        buildUptimeSensor(10000, "uptime", "uptime"), buildBuildVersionSensor(10000, "build_version", "build_version"),
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
-        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
-        buildRssiSensor(10000, "rssi", "rssi")
-    };
+        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"), buildRssiSensor(10000, "rssi", "rssi")};
     config.sensorsCount = SENSORS_COUNT;
 
     return config;
@@ -663,11 +656,11 @@ DeviceConfig getDeviceConfigById(int id) {
             return getMoxovichConfig();
         case 10742575:
             return getMoxovichSecondConfig();
-        case 6376678: // chel electro measurer
+        case 6376678:  // chel electro measurer
             return getDimpleConfig();
         case 14921653:
             return getChelFlanerConfig();
-        case 10690830: // filter osmso chel
+        case 10690830:  // filter osmso chel
             return getChelOsmosConfig();
         default:
             return getStubConfig();
