@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./decoder/decoder.py -p ESP8266 -t ~/.platformio/packages/toolchain-xtensa -e .pioenvs/nodemcuv2/firmware.elf -f ./src/ex.txt
+./decoder/decoder.py -p ESP8266 -t ~/.platformio/packages/toolchain-xtensa -e .pio/build/nodemcuv2/firmware.elf -f ./src/ex.txt

@@ -27,8 +27,12 @@ class OTAUpdate {
             // NOTE: if updating SPIFFS this would be the place to unmount
             // SPIFFS using SPIFFS.end()
             Serial.println("Start updating " + type);
+            // SPIFFS.end();
         });
-        ArduinoOTA.onEnd([]() { Serial.println("\nEnd"); });
+        ArduinoOTA.onEnd([]() {
+            Serial.println("\nEnd"); 
+            // SPIFFS.begin();
+        });
         ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
             Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
         });

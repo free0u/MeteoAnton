@@ -63,15 +63,17 @@ class SensorDallasTemp {
 
     float tempIsCorrect(float temp) {
         // return true;
-        return -80 < temp && temp < 80;
-        return -100 < temp && temp < 100;
+        // return -80 < temp && temp < 80;
+        return -100 < temp && temp < 150;
     }
 
     float temperatureByAddr(DeviceAddress deviceAddress) {
+        // sensors->setWaitForConversion(true);
         sensors->setWaitForConversion(false);
         sensors->requestTemperatures();  // Send the command to get temperatures
         pinMode(pin, OUTPUT);
         digitalWrite(pin, HIGH);
+        // delay(200);
         delay(750);
 
         float tempC = sensors->getTempC(deviceAddress);
@@ -111,6 +113,7 @@ class SensorDallasTemp {
                 meteoLog->add("Found device ", String(i), " with address: ", addr);
 
                 int resolution = sensors->getResolution(tempDeviceAddress);
+                sensors->setResolution(12);
                 meteoLog->add("Resolution actually set to: ", String(resolution));
             } else {
                 meteoLog->add("Found ghost device at ", String(i),

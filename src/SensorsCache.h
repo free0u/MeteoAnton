@@ -3,25 +3,31 @@
 
 #include "SensorsData.h"
 
-class SensorsCache {
-   private:
+class SensorsCache
+{
+private:
     bool cacheIsEmpty;
     int cachedCount;
     static const int ONE_MEASURE_LEN = 70;
     String sensorsApiUrl;
 
-   public:
+public:
     SensorsCache() {}
-    void init(String url) {
+    void init(String url)
+    {
         this->sensorsApiUrl = url;
-        if (SPIFFS.exists("/data.json")) {
-            File file = SPIFFS.open("/data.json", "r");
+        clear();
+        if (LittleFS.exists("/data.json"))
+        {
+            File file = LittleFS.open("/data.json", "r");
             int sz = file.size();
             file.close();
 
             cachedCount = sz / ONE_MEASURE_LEN + 1;
             cacheIsEmpty = false;
-        } else {
+        }
+        else
+        {
             cachedCount = 0;
             cacheIsEmpty = true;
         }
@@ -29,20 +35,24 @@ class SensorsCache {
 
     bool empty() { return cacheIsEmpty; }
 
-    bool clear() {
+    bool clear()
+    {
         cacheIsEmpty = true;
         cachedCount = 0;
-        return SPIFFS.remove("/data.json");
+        return LittleFS.remove("/data.json");
     }
 
-    bool add(SensorsData &data) {
-        File dataFile = SPIFFS.open("/data.json", "a");
-        if (!dataFile) {
+    bool add(SensorsData &data)
+    {
+        File dataFile = LittleFS.open("/data.json", "a");
+        if (!dataFile)
+        {
             Serial.println("Failed to open config file for writing");
             return false;
         }
 
-        if (cachedCount > 8000) {
+        if (cachedCount > 8000)
+        {
             return false;
         }
 
@@ -54,17 +64,21 @@ class SensorsCache {
         return true;
     }
 
-    bool sendCache(String &sensorsNames) {
-        File dataFile = SPIFFS.open("/data.json", "r");
-        if (!dataFile) {
+    bool sendCache(String &sensorsNames)
+    {
+        File dataFile = LittleFS.open("/data.json", "r");
+        if (!dataFile)
+        {
             Serial.println("Failed to open config file");
+            clear();
             return false;
         }
 
         Serial.println("Sending data...");
 
+        WiFiClient client;
         HTTPClient http;
-        http.begin(sensorsApiUrl);
+        http.begin(client, sensorsApiUrl);
         http.setTimeout(10000);
         http.addHeader("Sensors-Names", sensorsNames);
         int statusCode = http.sendRequest("POST", &dataFile, dataFile.size());
@@ -75,7 +89,8 @@ class SensorsCache {
         http.end();
         Serial.println("Sending data complete...");
 
-        if (statusCode == 200) {
+        if (statusCode == 200)
+        {
             clear();
         }
 
@@ -84,16 +99,19 @@ class SensorsCache {
 
     int getCachedCount() { return cachedCount; }
 
-    bool printFile() {
-        File dataFile = SPIFFS.open("/data.json", "r");
-        if (!dataFile) {
+    bool printFile()
+    {
+        File dataFile = LittleFS.open("/data.json", "r");
+        if (!dataFile)
+        {
             Serial.println("Failed to open config file");
             return false;
         }
         Serial.println("File size " + String(dataFile.size()));
         String s;
         int ind = 0;
-        do {
+        do
+        {
             s = dataFile.readString();
             Serial.println("do: " + String(s.length()));
             Serial.println(String(ind++) + ": " + s);

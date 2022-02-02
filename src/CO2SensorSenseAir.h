@@ -141,7 +141,7 @@ class CO2SensorSenseAir {
         if (nbBytesSent != 8) {
             Serial.println("SenseAir: Error, nb bytes sent != 9 : " + String(nbBytesSent));
         } else {
-            Serial.println("Sent 8 bytes");
+            // Serial.println("Sent 8 bytes");
         }
 
         if (response != NULL) {
@@ -152,8 +152,8 @@ class CO2SensorSenseAir {
                 if (hserial->available() > 0) {
                     int b = hserial->read();
                     response[counter++] = b;
-                    Serial.print(response[counter - 1]);
-                    Serial.print(" ");
+                    // Serial.print(response[counter - 1]);
+                    // Serial.print(" ");
                 } else {
                     yield();
                     delay(10);
@@ -164,7 +164,7 @@ class CO2SensorSenseAir {
             if (counter < 7) {
                 Serial.println("SenseAir: Error, timeout while trying to read, counter = " + String(counter));
             } else {
-                Serial.println("Counter = " + String(counter));
+                // Serial.println("Counter = " + String(counter));
             }
         }
 

@@ -73,8 +73,9 @@ class MeteoLog {
         url += ("?device=" + deviceName);
         url += ("&time=" + String(millis()));
 
+        WiFiClient client;
         HTTPClient http;
-        http.begin(url);
+        http.begin(client, url);
         http.setTimeout(10000);
         int statusCode = http.sendRequest("POST", resLog);
         Serial.println("Code: " + String(statusCode));
@@ -85,6 +86,10 @@ class MeteoLog {
             indexToReadFrom = 0;
             Serial.println("Log sent");
         }
+
+        http.end();
+
+        return 0;
     }
 
     int getCount() { return NUM; }

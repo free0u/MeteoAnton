@@ -5,14 +5,17 @@ print('Inc BuildVersion')
 import os 
 # dir_path = os.path.dirname(os.path.realpath(__file__))
 
-path = env['PROJECTSRC_DIR']
+path = env['PROJECT_SRC_DIR']
 path += '/BuildVersion.h'
 
-pathVer = env['PROJECTSRC_DIR']
+pathVer = env['PROJECT_SRC_DIR']
 pathVer += '/../version.txt'
 
 print(path)
-
+print(env.Dump())
+# for key in env:
+#     print(key)
+#     print(env[key])
 
 def incVersion(ver):
     parts = ver.strip().split()
