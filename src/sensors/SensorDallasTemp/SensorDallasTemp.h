@@ -2,6 +2,8 @@
 #include <OneWire.h>
 // #include <HardwareSerial.h>
 
+#include "system/MeteoLog.h"
+
 // #define ONE_WIRE_BUS D6  // 1 opus
 // #define ONE_WIRE_BUS D6 // 2 wave
 #define TEMPERATURE_PRECISION 9

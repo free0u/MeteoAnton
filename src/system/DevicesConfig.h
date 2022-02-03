@@ -314,11 +314,11 @@ DeviceConfig getColumbusConfig() {
     // 2841F7E9090000FF
     DeviceAddress addrTempIn = {0x28, 0x41, 0xF7, 0xE9, 0x09, 0x00, 0x00, 0xFF};
 
-    const int SENSORS_COUNT = 7;
+    const int SENSORS_COUNT = 6;
     config.sensors = new SensorConfig[SENSORS_COUNT]{
         buildDallasSensor(D7, addrTempIn, 10000, "temp_in", "dallas1"),
         buildDallasSensor(D7, addrTempOut, 10000, "temp_out", "dallas2"),
-        buildBme280Sensor(D3, D5, {0x76}, 10000, "hum_in", "hum_in"),
+        // buildBme280Sensor(D3, D5, {0x76}, 10000, "hum_in", "hum_in"),
         buildUptimeSensor(10000, "uptime", "uptime"),
         buildBuildVersionSensor(10000, "build_version", "build_version"),
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),

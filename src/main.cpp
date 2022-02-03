@@ -2,20 +2,10 @@
 #include <ESP8266WiFi.h>
 #include <ESPAsyncTCP.h>
 
-#include "BME280.h"
-#include "BuildVersion.h"
-#include "DevicesConfig.h"
+// #include "BME280.h"
 #include "ESP8266httpUpdate.h"
 #include "EspSaveCrash.h"
 #include "LittleFS.h"
-#include "MeteoLog.h"
-#include "OTAUpdate.h"
-#include "SensorsCache.h"
-#include "SensorsData.h"
-#include "Timeouts.h"
-#include "Timing.h"
-#include "Timing2.h"
-#include "WiFiConfig.h"
 #include "helpers/CheckTime.h"
 #include "modules/led/Led.h"
 #include "modules/radio433/RxTx433.h"
@@ -24,7 +14,17 @@
 #include "sensors/dht/DHTSensor.h"
 #include "sensors/electro/ElectroSensorStorage.h"
 #include "sensors/electro/EmonLibSensor.h"
+#include "sensors/store/SensorsCache.h"
+#include "sensors/store/SensorsData.h"
 #include "sensors/water/WaterSensorStorage.h"
+#include "system/BuildVersion.h"
+#include "system/DevicesConfig.h"
+#include "system/MeteoLog.h"
+#include "system/OTAUpdate.h"
+#include "system/Timeouts.h"
+#include "system/Timing.h"
+#include "system/Timing2.h"
+#include "system/WiFiConfig.h"
 #define WEBSERVER_H
 #include <ESPAsyncWebServer.h>
 AsyncWebServer server(80);
@@ -48,7 +48,7 @@ Timing timing;
 Timing2 timing2;
 CO2SensorSenseAir co2;
 RxTx433 rxtx;
-BME280 bme;
+// BME280 bme;
 ElectroSensorStorage electroSensorStorage;
 WaterSensorStorage waterSensorStorage;
 CheckTime checkTimeClass;
@@ -291,12 +291,12 @@ void initSensors() {
                     hasReceiver433 = true;
                 }
                 break;
-            case BME_SENSOR:
-                meteoLog.add("BME280 init...");
-                Wire.begin(sensorConfig.pin1, sensorConfig.pin2);
-                bme.init(sensorConfig.address[0]);
-                meteoLog.add("BME280 init... Done");
-                break;
+            // case BME_SENSOR:
+            //     meteoLog.add("BME280 init...");
+            //     Wire.begin(sensorConfig.pin1, sensorConfig.pin2);
+            //     bme.init(sensorConfig.address[0]);
+            //     meteoLog.add("BME280 init... Done");
+            //     break;
             case IRMS_SENSOR:
                 meteoLog.add("EmonLib Irms init...");
                 emonSensor.init(sensorConfig.param1, sensorConfig.param2);
@@ -368,8 +368,8 @@ float readSensor(SensorConfig& sensorConfig) {
             return WiFi.RSSI();
         case DALLAS_SENSOR:
             return temp.getTemp(sensorConfig.address);
-        case BME_SENSOR:
-            return bme.humidity();
+        // case BME_SENSOR:
+        //     return bme.humidity();
         case DHT_SENSOR:
             return dht.humidity();
         case DHT_SENSOR_TEMP:

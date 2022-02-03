@@ -6,7 +6,7 @@ import os
 # dir_path = os.path.dirname(os.path.realpath(__file__))
 
 path = env['PROJECT_SRC_DIR']
-path += '/BuildVersion.h'
+path += '/system/BuildVersion.h'
 
 pathVer = env['PROJECT_SRC_DIR']
 pathVer += '/../version.txt'

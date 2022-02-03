@@ -3,8 +3,8 @@
 
 #include <TimeLib.h>
 
-#include "DevicesConfig.h"
-#include "Timeouts.h"
+#include "system/DevicesConfig.h"
+#include "system/Timeouts.h"
 
 class Sensor {
    private:
