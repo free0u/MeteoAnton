@@ -64,7 +64,7 @@ SensorsData sensorsData;
 long bootTime;
 
 DeviceConfig config;
-long* sensorsUpdateTime;
+// long* sensorsUpdateTime;
 
 void initSensors();
 
@@ -249,10 +249,11 @@ long maxUpdateSensorTime = 0;
 
 void initSensors() {
     meteoLog.add("SensorsData init...");
-    sensorsUpdateTime = new long[config.sensorsCount];
-    for (int i = 0; i < config.sensorsCount; i++) {
-        sensorsUpdateTime[i] = -1e9;
-    }
+    // sensorsUpdateTime = new long[config.sensorsCount];
+    // for (int i = 0; i < config.sensorsCount; i++) {
+    //     sensorsUpdateTime[i] = -1e9;
+    // }
+    checkTimeClass.initSensorUpdateTime(config.sensorsCount);
     sensorsData.init(config.sensors, config.sensorsCount);
 
     for (int i = 0; i < config.sensorsCount; i++) {
@@ -329,12 +330,11 @@ void initSensors() {
 }
 
 // timers
-long timeButtonPress = 0;
+// long timeButtonPress = 0;
 long timeScanCo21 = -1e9;
 long timeScanCo22 = -1e9;
-long timeDataSend = -1e9;
-long time433Send = -1e9;
-long timeIrmsSumSpend = -1e9;
+// long time433Send = -1e9;
+// long timeIrmsSumSpend = -1e9;
 long rtcTimeUpdate = -RTC_TIME_UPDATE_TIMEOUT;
 long sensorsDataUpdated = -1e9;
 long dhtSensorUpdated = -1e9;
@@ -347,13 +347,13 @@ float irmsSumSpentSmallValue = 0;
 
 int buttonCount = 0;
 
-bool checkTime(long& ts, long unsigned delay) {
-    if (millis() - ts > delay) {
-        ts = millis();
-        return true;
-    }
-    return false;
-}
+// bool checkTime2(long& ts, long unsigned delay) {
+//     if (millis() - ts > delay) {
+//         ts = millis();
+//         return true;
+//     }
+//     return false;
+// }
 
 float readSensor(SensorConfig& sensorConfig) {
     switch (sensorConfig.type) {
@@ -417,7 +417,8 @@ void tryUpdateSensors() {
         // }
 
         timeTestDiffCheck("before " + sensorConfig.debug_name);
-        if (checkTime(sensorsUpdateTime[i], sensorConfig.timeout)) {
+        // if (checkTime2(sensorsUpdateTime[i], sensorConfig.timeout)) {
+        if (checkTimeClass.checkSensorByInd(i, sensorConfig.timeout)) {
             float value = readSensor(sensorConfig);
             meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.debug_name) + " read: " + value);
             sensorData.set(value, now());
@@ -526,7 +527,7 @@ int cnt433 = 0;
 //     }
 // }
 
-long testButtonWater = -1e9;
+// long testButtonWater = -1e9;
 
 int waterButtonState = -1;
 
@@ -581,7 +582,8 @@ void loop() {
         maxUpdateSensorTime = updateSensorTimeDiff;
     }
 
-    if (checkTime(testButtonWater, 1000) && hasWaterSensor) {
+    // if (checkTime(testButtonWater OK, 1000) && hasWaterSensor) {
+    if (checkTimeClass.checkButtonWater(1000) && hasWaterSensor) {
         int newButtonState = digitalRead(D2);
         if (waterButtonState == -1) {
             waterButtonState = newButtonState;
@@ -610,7 +612,8 @@ void loop() {
     }
 
     int SMALL_INTERVAL = 3000;
-    if (checkTime(timeIrmsSumSpend, SMALL_INTERVAL) && hasIrmsSensor) {
+    // if (checkTime(timeIrmsSumSpend OK, SMALL_INTERVAL) && hasIrmsSensor) {
+    if (checkTimeClass.checkIrmsSumSpend(SMALL_INTERVAL) && hasIrmsSensor) {
         float res = electroSensorStorage.save(powerSpent);
         meteoLog.add("electroSensorStorage init write: " + String(powerSpent) + " res: " + String(res));
         long ts = millis();
@@ -682,7 +685,8 @@ void loop() {
         }
     }
 
-    if (checkTime(time433Send, 1000) && hasTransmitter433) {
+    // if (checkTime(time433Send OK, 1000) && hasTransmitter433) {
+    if (checkTimeClass.check433Send(1000) && hasTransmitter433) {
         cnt433++;
         rxtx.send(cnt433, config.deviceName);
         meteoLog.add("433 SENT !!!");
@@ -690,9 +694,8 @@ void loop() {
 
     timeTestDiffCheck("another sensors");
 
-    // if (checkTime(timeDataSend, SERVER_SENDING_TIMEOUT)) {
+    // if (checkTime(timeDataSend OK, SERVER_SENDING_TIMEOUT)) {
     if (checkTimeClass.checkSendSensorToServer(10000)) {
-        // if (checkTime(timeDataSend, 10000)) {
         // if (hasReceiver433) {
         //     uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
         //     uint8_t buflen = sizeof(buf);
@@ -717,9 +720,6 @@ void loop() {
         int rssi = WiFi.RSSI();
         rs = millis() - rs;
         meteoLog.add("rssi " + String(rssi) + " " + String(rs));
-
-        // if (checkTime(timeDataSend, 5 * 60 * 1000)) {
-        // timing.dumpLastNTPSync();
 
         timeTestDiffCheck("before beginning send");
         if (cache.empty()) {
@@ -758,7 +758,8 @@ void loop() {
 
     int buttonState = digitalRead(BUTTON);
     if (buttonState == LOW) {
-        if (checkTime(timeButtonPress, 800)) {
+        // if (checkTime(timeButtonPress OK, 800)) {
+        if (checkTimeClass.checkButtonPress(800)) {
             buttonCount++;
             meteoLog.add(String(buttonState));
         }
