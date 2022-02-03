@@ -4,7 +4,6 @@
 
 #include "BME280.h"
 #include "BuildVersion.h"
-#include "CO2SensorSenseAir.h"
 #include "DHTSensor.h"
 #include "DevicesConfig.h"
 #include "ESP8266httpUpdate.h"
@@ -16,6 +15,7 @@
 #include "MeteoLog.h"
 #include "OTAUpdate.h"
 #include "RxTx433.h"
+#include "sensors/co2/CO2SensorSenseAir.h"
 // #include "SensorDallasTemp.h"
 #include "SensorsCache.h"
 #include "SensorsData.h"
@@ -488,6 +488,7 @@ int sendDataApi(bool reallySend) {
 
 long dumpJsonTime = -1e9;
 
+// TODO make handle to switch
 bool wifiOn() {
     return true;
     // return false;
@@ -691,7 +692,7 @@ void loop() {
 
     // if (checkTime(timeDataSend, SERVER_SENDING_TIMEOUT)) {
     if (checkTimeClass.checkSendSensorToServer(10000)) {
-    // if (checkTime(timeDataSend, 10000)) {
+        // if (checkTime(timeDataSend, 10000)) {
         // if (hasReceiver433) {
         //     uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
         //     uint8_t buflen = sizeof(buf);
