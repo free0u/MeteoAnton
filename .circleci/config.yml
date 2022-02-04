@@ -20,4 +20,4 @@ jobs:
           name: platformio run
           command: |
             . pl/bin/activate
-            platformio run --environment nodemcuv2-opus
+            platformio run --environment nodemcuv2-ci
