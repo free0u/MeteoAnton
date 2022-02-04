@@ -278,7 +278,7 @@ SensorConfig buildFreeHeapVersionSensor(long timeout, String field_name, String 
 DeviceConfig getDinoConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "dino";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -304,7 +304,7 @@ DeviceConfig getDinoConfig() {
 DeviceConfig getColumbusConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "columbus";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -332,7 +332,7 @@ DeviceConfig getColumbusConfig() {
 DeviceConfig getWaveConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "wave";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58 * 1000 * 1;
     config.logSendTimeout = 58 * 1000 * 1;
 
@@ -357,7 +357,8 @@ DeviceConfig getWaveConfig() {
 DeviceConfig getOpusConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "opus";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    // SEND_DATA_URL
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -403,7 +404,7 @@ address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9 2021-
 DeviceConfig getSunnyConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "sunny";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -432,7 +433,7 @@ DeviceConfig getSunnyConfig() {
 DeviceConfig getChelConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "chel";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -470,7 +471,7 @@ DeviceConfig getChelConfig() {
 DeviceConfig getArcticConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "arctic";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -494,7 +495,7 @@ DeviceConfig getArcticConfig() {
 DeviceConfig getMoxovichConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "moxovich";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -519,7 +520,7 @@ DeviceConfig getMoxovichConfig() {
 DeviceConfig getMoxovichSecondConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "moxovich_second";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -542,7 +543,7 @@ DeviceConfig getMoxovichSecondConfig() {
 DeviceConfig getDimpleConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "dimple";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -570,7 +571,7 @@ DeviceConfig getDimpleConfig() {
 DeviceConfig getChelFlanerConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "chel_flaner";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
@@ -603,7 +604,7 @@ DeviceConfig getChelFlanerConfig() {
 DeviceConfig getChelOsmosConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "chel_osmos";
-    config.sensorsApiUrl = "***REMOVED***" + config.deviceName;
+    config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 

@@ -46,8 +46,6 @@ class Sensor {
 
 class SensorsData {
    private:
-    // static const int SENSORS_COUNT = 7;
-    // Sensor* sensors[SENSORS_COUNT] = {&dsTempIn1, &dsTempIn2, &dsTempOut, &dhtHum, &co2, &uptime, &buildVersion};
     int sensorsCount;
 
     String getSensorsNames() {
@@ -63,15 +61,6 @@ class SensorsData {
 
    public:
     Sensor* sensors;
-    // Sensor co2;
-    // Sensor uptime;
-    // Sensor buildVersion;
-
-    // Sensor dsTempIn1;
-    // Sensor dsTempIn2;
-    // Sensor dsTempOut;
-    // Sensor dhtHum;
-    // Sensor bmeHum;
     String sensorsNames;
 
     SensorsData() {}
@@ -85,16 +74,7 @@ class SensorsData {
         sensorsNames = getSensorsNames();
     }
 
-    void init() {
-        // dsTempIn1.init("temp_in");
-        // dsTempIn2.init("temp_in_bak");
-        // dsTempOut.init("temp_out");
-        // dhtHum.init("hum_in");
-        // co2.init("co2");
-        // uptime.init("uptime");
-        // buildVersion.init("build_version");
-        sensorsNames = getSensorsNames();
-    }
+    void init() { sensorsNames = getSensorsNames(); }
 
     String serialize() {
         long timeNow = now();

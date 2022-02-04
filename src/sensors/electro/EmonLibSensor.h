@@ -8,7 +8,7 @@ class EmonLibSensor {
     bool isInit = false;
     float ICAL;
     float voltage;
-    EnergyMonitor emon;
+    EnergyMonitor *emon;
 
    public:
     EmonLibSensor() { isInit = false; }
@@ -19,11 +19,11 @@ class EmonLibSensor {
         ICAL = _ICAL;
         voltage = _voltage;
         isInit = true;
-
-        emon.current(A0, ICAL);
+        emon = new EnergyMonitor();
+        emon->current(A0, ICAL);
     }
     float Irms() {
-        float I = emon.calcIrms(1480);
+        float I = emon->calcIrms(1480);
         return I;
     }
     float power() { return voltage * Irms(); }

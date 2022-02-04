@@ -1,11 +1,8 @@
 #include <ESP8266HTTPClient.h>
-#include <ESP8266WiFi.h>
-#include <ESPAsyncTCP.h>
+#include <ESP8266httpUpdate.h>
+#include <LittleFS.h>
 
-// #include "BME280.h"
-#include "ESP8266httpUpdate.h"
 #include "EspSaveCrash.h"
-#include "LittleFS.h"
 #include "helpers/CheckTime.h"
 #include "modules/led/Led.h"
 #include "modules/radio433/RxTx433.h"
@@ -26,66 +23,46 @@
 #include "system/Timing2.h"
 #include "system/WiFiConfig.h"
 #define WEBSERVER_H
-#include <ESPAsyncWebServer.h>
+#include "ESPAsyncWebServer.h"
 AsyncWebServer server(80);
 
 // Call to ESpressif SDK
-extern "C" {
-#include <user_interface.h>
-}
+// extern "C" {
+// #include <user_interface.h>
+// }
 
 #define BUTTON 0
 
-OTAUpdate otaUpdate;
-
-WiFiConfig wifiConfig;
-SensorDallasTemp temp;
-DHTSensor dht;
-MeteoLog meteoLog;
-EmonLibSensor emonSensor;
+// utils
+EspSaveCrash SaveCrash(0x0010, 0x0400);
 Led led;
+CheckTime checkTimeClass;
+OTAUpdate otaUpdate;
+MeteoLog meteoLog;
 Timing timing;
 Timing2 timing2;
-CO2SensorSenseAir co2;
-RxTx433 rxtx;
-// BME280 bme;
+// configs
+WiFiConfig wifiConfig;
+DeviceConfig config;
+// hardware
 ElectroSensorStorage electroSensorStorage;
 WaterSensorStorage waterSensorStorage;
-CheckTime checkTimeClass;
+CO2SensorSenseAir co2;
+SensorDallasTemp temp;
+DHTSensor dht;
+EmonLibSensor emonSensor;
+RxTx433 rxtx;
+// sensors storage
+SensorsCache cache;
+SensorsData sensorsData;
 
 bool hasReceiver433 = false;
 bool hasTransmitter433 = false;
 bool hasIrmsSensor = false;
 bool hasWaterSensor = false;
 
-SensorsCache cache;
-SensorsData sensorsData;
-long bootTime;
-
-DeviceConfig config;
-// long* sensorsUpdateTime;
-
-void initSensors();
-
-void processInternetUpdate(String const& device, String const& version) {
-    ESPhttpUpdate.setLedPin(D4, LOW);
-    WiFiClient client;
-    String url = "***REMOVED***" + device + "&version=" + version;
-    t_httpUpdate_return ret = ESPhttpUpdate.update(client, url);
-    switch (ret) {
-        case HTTP_UPDATE_FAILED:
-            meteoLog.add("[update] Update failed.");
-            Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(),
-                          ESPhttpUpdate.getLastErrorString().c_str());
-            break;
-        case HTTP_UPDATE_NO_UPDATES:
-            meteoLog.add("[update] Update no Update.");
-            break;
-        case HTTP_UPDATE_OK:
-            meteoLog.add("[update] Update ok.");  // may not be called since we reboot the ESP
-            break;
-    }
-}
+char* _debugOutputBuffer;
+char* _debugOutputBufferForCrash;
 
 void recover() {
     led.on();
@@ -116,38 +93,23 @@ void recover() {
 
     // led.on();
     WiFiClient client;
-    ESPhttpUpdate.update(client, "***REMOVED***" + String(ESP.getChipId()));
+    ESPhttpUpdate.update(client, RECOVER_FIRMWARE_URL + String(ESP.getChipId()));
     // led.off();
     Serial.println("Recover end");
 }
 
-EspSaveCrash SaveCrash(0x0010, 0x0400);
-char* _debugOutputBuffer;
-char* _debugOutputBufferForCrash;
+String getCrash();
+String makeCrash();
+String clearCrash();
 
-String getCrash() {
-    strcpy(_debugOutputBuffer, "");
-    SaveCrash.crashToBuffer(_debugOutputBuffer);
-    return String(_debugOutputBuffer);
-}
-
-String makeCrash() {
-    // cppcheck-suppress1 unusedVariable
-    int ssss = 1 / 0;
-    strcpy(_debugOutputBufferForCrash, "crash it");
-    return "crashed";
-}
-
-String clearCrash() {
-    SaveCrash.clear();
-    return "cleared";
-}
+void initSensors();
 
 void setup() {
     Serial.begin(115200);
     pinMode(BUTTON, INPUT_PULLUP);
     led.off();
 
+    // TODO think about recover
     recover();
 
     int chipId = ESP.getChipId();
@@ -159,8 +121,6 @@ void setup() {
     SaveCrash.print();
     SaveCrash.clear();
 
-    bootTime = now();
-
     // setup log
     meteoLog.init();
     meteoLog.add("Booting...");
@@ -171,7 +131,7 @@ void setup() {
     WiFi.hostname("ESP_" + config.deviceName);
     if (wifiConfig.connect()) {
         led.off();
-        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
+        // processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
     }
     meteoLog.add("WiFi connected");
     meteoLog.add("IP address: " + WiFi.localIP().toString());
@@ -230,13 +190,52 @@ void setup() {
     meteoLog.add(" *********** OLD ESP8266 MAC: *********** ");
     meteoLog.add(String(WiFi.macAddress()));
 
-    uint8_t mac[6]{0xA8, 0xD8, 0xB4, 0x1D, 0xA4, 0xCE};
-    if (config.deviceName == "wave") {
-        wifi_set_macaddr(0, const_cast<uint8*>(mac));
-    }
+    // use if device is banned in network
+    // uint8_t mac[6]{0xA8, 0xD8, 0xB4, 0x1D, 0xA4, 0xCE};
+    // if (config.deviceName == "wave") {
+    //     wifi_set_macaddr(0, const_cast<uint8*>(mac));
+    // }
 
     meteoLog.add(" *********** NEW ESP8266 MAC:  *********** ");
     meteoLog.add(String(WiFi.macAddress()));
+}
+
+void processInternetUpdate(String const& device, String const& version) {
+    ESPhttpUpdate.setLedPin(D4, LOW);
+    WiFiClient client;
+    String url = REGULAR_UPDATE_FIRMWARE_URL + device + "&version=" + version;
+    t_httpUpdate_return ret = ESPhttpUpdate.update(client, url);
+    switch (ret) {
+        case HTTP_UPDATE_FAILED:
+            meteoLog.add("[update] Update failed.");
+            Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(),
+                          ESPhttpUpdate.getLastErrorString().c_str());
+            break;
+        case HTTP_UPDATE_NO_UPDATES:
+            meteoLog.add("[update] Update no Update.");
+            break;
+        case HTTP_UPDATE_OK:
+            meteoLog.add("[update] Update ok.");  // may not be called since we reboot the ESP
+            break;
+    }
+}
+
+String getCrash() {
+    strcpy(_debugOutputBuffer, "");
+    SaveCrash.crashToBuffer(_debugOutputBuffer);
+    return String(_debugOutputBuffer);
+}
+
+String makeCrash() {
+    // cppcheck-suppress1 unusedVariable
+    int ssss = 1 / 0;
+    strcpy(_debugOutputBufferForCrash, "crash it");
+    return "crashed";
+}
+
+String clearCrash() {
+    SaveCrash.clear();
+    return "cleared";
 }
 
 float powerSpent = -1e9;
@@ -425,33 +424,6 @@ void tryUpdateSensors() {
         }
     }
 }
-
-String generateThingspeakPair(int ind, Sensor sensor) {
-    float value = sensor.getIfUpdated();
-    if (isnan(value)) {
-        return "";
-    }
-    return "&field" + String(ind) + "=" + String(value);
-}
-
-// String generateThingspeakPair(int ind, int value) { return "&field" + String(ind) + "=" + String(value); }
-
-// int sendDataTs() {
-//     int up = millis() / 1000;
-//     String url = "***REMOVED***";
-
-//     url += generateThingspeakPair(1, sensorsData.co2uart);
-//     url += generateThingspeakPair(2, up / 60);
-//     url += generateThingspeakPair(3, sensorsData.co2);
-//     url += generateThingspeakPair(4, sensorsData.dsTempOne);
-//     url += generateThingspeakPair(5, sensorsData.bmeHum);
-
-//     HTTPClient http;
-//     http.begin(url);
-//     int statusCode = http.GET();
-//     http.end();
-//     return statusCode;
-// }
 
 int sendDataApi(bool reallySend) {
     meteoLog.add("Sending data...");
@@ -751,7 +723,7 @@ void loop() {
         processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
         timeTestDiffCheck("after processInternetUpdate");
 
-        meteoLog.sendLog(config.deviceName, "***REMOVED***");
+        meteoLog.sendLog(config.deviceName, SEND_LOG_URL);
         timeTestDiffCheck("after sendLog");
     }
 

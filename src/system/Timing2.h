@@ -13,10 +13,15 @@ class Timing2 {
     WiFiUDP *ntpUDP;
     NTPClient *timeClient;
     MeteoLog *meteoLog;
+    bool isInit = false;
 
    public:
     Timing2() {}
     void init(MeteoLog *meteoLog) {
+        if (isInit) {
+            return;
+        }
+        isInit = true;
         this->meteoLog = meteoLog;
 
         meteoLog->add("NTPClient");

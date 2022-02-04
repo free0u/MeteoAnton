@@ -1,3 +1,6 @@
+#ifndef SENSOR_DALLAS_TEMP_h
+#define SENSOR_DALLAS_TEMP_h
+
 #include <DallasTemperature.h>
 #include <OneWire.h>
 // #include <HardwareSerial.h>
@@ -175,3 +178,5 @@ class SensorDallasTemp {
         }
     }
 };
+
+#endif
