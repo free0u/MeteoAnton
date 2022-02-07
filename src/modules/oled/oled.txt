@@ -6,7 +6,7 @@ p      732      mm
 out   -21.1°   59%
 
            21:33:01
-SSID       ***REMOVED***
+SSID       homewifi
 IP    192.168.1.167
 Cache     157 items
 
