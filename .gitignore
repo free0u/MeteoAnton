@@ -3,3 +3,4 @@
 .vscode/launch.json
 creds/Tokens.h
 uploadFirmwareToServer
+*.code-workspace
