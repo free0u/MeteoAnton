@@ -13,9 +13,10 @@ class WiFiConfig {
    public:
     WiFiConfig() {}
 
-    bool connect() {
+    bool connect(String name) {
         Serial.println("Trying to connect: " + WiFi.SSID());
         WiFi.mode(WIFI_STA);
+        WiFi.hostname("ESP-" + name);
         WiFi.begin();
         if (WiFi.waitForConnectResult() != WL_CONNECTED) {
             Serial.println("Connection Failed!");

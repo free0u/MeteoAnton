@@ -128,11 +128,11 @@ void setup() {
     // setup wifi connection
     led.on();
     meteoLog.add("Connecting to WiFi...");
-    WiFi.hostname("ESP_" + config.deviceName);
-    if (wifiConfig.connect()) {
+    if (wifiConfig.connect(config.deviceName)) {
         led.off();
         // processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
     }
+
     meteoLog.add("WiFi connected");
     meteoLog.add("IP address: " + WiFi.localIP().toString());
 

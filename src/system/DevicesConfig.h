@@ -381,6 +381,10 @@ address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9 2021-
     // DeviceAddress addrTempTest2 = {0x28, 0x5C, 0xCF, 0x95, 0xF0, 0x01, 0x3C, 0x34};
     // DeviceAddress addrTempTest3 = {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9};
 
+// SensorConfig[] aaa = new SensorConfig[]{
+//         buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in")
+// }
+
     const int SENSORS_COUNT = 11;
     config.sensors = new SensorConfig[SENSORS_COUNT]{
         buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in"),
