@@ -1,4 +1,5 @@
 #include <ESP8266HTTPClient.h>
+#include <ESP8266WebServer.h>
 #include <ESP8266httpUpdate.h>
 #include <LittleFS.h>
 
@@ -6,6 +7,7 @@
 #include "helpers/CheckTime.h"
 #include "modules/led/Led.h"
 #include "modules/radio433/RxTx433.h"
+#include "modules/web_api/WebApi.h"
 #include "sensors/SensorDallasTemp/SensorDallasTemp.h"
 #include "sensors/co2/CO2SensorSenseAir.h"
 #include "sensors/dht/DHTSensor.h"
@@ -25,14 +27,13 @@
 
 #define WEBSERVER_H
 #include "ESPAsyncWebServer.h"
-AsyncWebServer server(80);
+
+#define FLASH_BUTTON 0
 
 // Call to ESpressif SDK
 // extern "C" {
 // #include <user_interface.h>
 // }
-
-#define BUTTON 0
 
 // utils
 EspSaveCrash SaveCrash(0x0010, 0x0400);
@@ -40,6 +41,7 @@ Led led;
 CheckTime checkTimeClass;
 OTAUpdate otaUpdate;
 MeteoLog meteoLog;
+WebApi webApi;
 // Timing timing;
 Timing2 timing2;
 // configs
@@ -72,7 +74,7 @@ void recover() {
 
     bool pressed = true;
     for (int i = 0; i < 10; i++) {
-        int buttonState = digitalRead(BUTTON);
+        int buttonState = digitalRead(FLASH_BUTTON);
         Serial.println("button: " + String(buttonState));
         if (buttonState == HIGH) {
             pressed = false;
@@ -106,8 +108,8 @@ void setupHandles();
 
 void setup() {
     Serial.begin(115200);
-    pinMode(BUTTON, INPUT_PULLUP);  // flash button
-    led.init(D4);                   // inner led
+    pinMode(FLASH_BUTTON, INPUT_PULLUP);  // flash button
+    led.init(D4);                         // inner led
     recover();
 
     int chipId = ESP.getChipId();
@@ -173,27 +175,28 @@ void setup() {
     meteoLog.add(" *********** NEW ESP8266 MAC:  *********** ");
     meteoLog.add(String(WiFi.macAddress()));
 
+    webApi.init();
     setupHandles();
 }
 
 void setupHandles() {
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+    webApi.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         // request->send(200, "text/plain", "123");
         request->send(200, "text/plain",
                       "millis: " + String(millis()) + "\n" + "Sensors-Names: " + sensorsData.sensorsNames + "\n" +
                           "Sensors: " + sensorsData.serialize());
     });
 
-    server.on("/crash", HTTP_GET, [](AsyncWebServerRequest* request) {
+    webApi.on("/crash", HTTP_GET, [](AsyncWebServerRequest* request) {
         // request->send(200, "text/plain", "123");
         request->send(200, "text/plain", getCrash());
     });
-    server.on("/clearCrash", HTTP_GET,
+    webApi.on("/clearCrash", HTTP_GET,
               [](AsyncWebServerRequest* request) { request->send(200, "text/plain", clearCrash()); });
-    server.on("/makeCrash", HTTP_GET,
+    webApi.on("/makeCrash", HTTP_GET,
               [](AsyncWebServerRequest* request) { request->send(200, "text/plain", makeCrash()); });
 
-    server.on("/led", HTTP_GET, [](AsyncWebServerRequest* request) {
+    webApi.on("/led", HTTP_GET, [](AsyncWebServerRequest* request) {
         String inputMessage;
         if (request->hasParam("value")) {
             inputMessage = request->getParam("value")->value();
@@ -204,7 +207,7 @@ void setupHandles() {
         Serial.println(inputMessage);
         request->send(200, "text/plain", "OK");
     });
-    server.begin();
+    webApi.begin();
 }
 
 void processInternetUpdate(String const& device, String const& version, bool sendLog) {
@@ -536,7 +539,7 @@ void loop() {
     // otaUpdate.handle();
     // return;
 
-    // int buttonState2 = digitalRead(BUTTON);
+    // int buttonState2 = digitalRead(FLASH_BUTTON);
 
     // meteoLog.add(String(cnt2++) + " test");
     // meteoLog.add("button: " + String(buttonState2));
@@ -737,7 +740,7 @@ void loop() {
         timeTestDiffCheck("after sendLog");
     }
 
-    int buttonState = digitalRead(BUTTON);
+    int buttonState = digitalRead(FLASH_BUTTON);
     if (buttonState == LOW) {
         // if (checkTime(timeButtonPress OK, 800)) {
         if (checkTimeClass.checkButtonPress(800)) {
