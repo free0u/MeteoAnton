@@ -29,6 +29,7 @@
 #include "ESPAsyncWebServer.h"
 
 #define FLASH_BUTTON 0
+#define LED_PIN D4
 
 // Call to ESpressif SDK
 // extern "C" {
@@ -70,7 +71,7 @@ char* _debugOutputBufferForCrash;
 void recover() {
     led.on();
     delay(2000);
-    Serial.println("Recover start");
+    Serial.println("\n\nRecover start");
 
     bool pressed = true;
     for (int i = 0; i < 10; i++) {
@@ -103,13 +104,13 @@ String makeCrash();
 String clearCrash();
 
 void initSensors();
-void processInternetUpdate(String const& device, String const& version, bool sendLog);
+void processInternetUpdate(String const& device, String const& version, bool callFromSetup);
 void setupHandles();
 
 void setup() {
     Serial.begin(115200);
     pinMode(FLASH_BUTTON, INPUT_PULLUP);  // flash button
-    led.init(D4);                         // inner led
+    led.init(LED_PIN);                    // inner led
     recover();
 
     int chipId = ESP.getChipId();
@@ -118,7 +119,7 @@ void setup() {
 
     if (wifiConfig.connect(config.deviceName)) {
         led.off();
-        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), false);
+        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), true);
     }
 
     _debugOutputBuffer = (char*)calloc(2048, sizeof(char));
@@ -200,7 +201,7 @@ void setupHandles() {
         String inputMessage;
         if (request->hasParam("value")) {
             inputMessage = request->getParam("value")->value();
-            analogWrite(D4, inputMessage.toInt());
+            analogWrite(LED_PIN, inputMessage.toInt());
         } else {
             inputMessage = "No message sent";
         }
@@ -210,26 +211,29 @@ void setupHandles() {
     webApi.begin();
 }
 
-void processInternetUpdate(String const& device, String const& version, bool sendLog) {
-    ESPhttpUpdate.setLedPin(D4, LOW);
+void processInternetUpdate(String const& device, String const& version, bool callFromSetup) {
+    ESPhttpUpdate.setLedPin(LED_PIN, LOW);
     WiFiClient client;
     String url = REGULAR_UPDATE_FIRMWARE_URL + device + "&version=" + version;
+    if (callFromSetup) {
+        url += "&afterStart=true";
+    }
     t_httpUpdate_return ret = ESPhttpUpdate.update(client, url);
     switch (ret) {
         case HTTP_UPDATE_FAILED:
-            if (sendLog) {
+            if (!callFromSetup) {
                 meteoLog.add("[update] Update failed.");
             }
             Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(),
                           ESPhttpUpdate.getLastErrorString().c_str());
             break;
         case HTTP_UPDATE_NO_UPDATES:
-            if (sendLog) {
+            if (!callFromSetup) {
                 meteoLog.add("[update] Update no Update.");
             }
             break;
         case HTTP_UPDATE_OK:
-            if (sendLog) {
+            if (!callFromSetup) {
                 meteoLog.add("[update] Update ok.");  // may not be called since we reboot the ESP
             }
             break;
@@ -733,7 +737,7 @@ void loop() {
         maxUpdateSensorTime = 0;
 
         meteoLog.add("Trying to update firmware...");
-        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), true);
+        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), false);
         timeTestDiffCheck("after processInternetUpdate");
 
         meteoLog.sendLog(config.deviceName, SEND_LOG_URL);
