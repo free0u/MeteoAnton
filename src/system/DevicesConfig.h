@@ -381,9 +381,9 @@ address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9 2021-
     // DeviceAddress addrTempTest2 = {0x28, 0x5C, 0xCF, 0x95, 0xF0, 0x01, 0x3C, 0x34};
     // DeviceAddress addrTempTest3 = {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9};
 
-// SensorConfig[] aaa = new SensorConfig[]{
-//         buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in")
-// }
+    // SensorConfig[] aaa = new SensorConfig[]{
+    //         buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in")
+    // }
 
     const int SENSORS_COUNT = 11;
     config.sensors = new SensorConfig[SENSORS_COUNT]{
@@ -460,7 +460,7 @@ DeviceConfig getChelConfig() {
         // buildDallasSensor(D6, addrTempOut, 10000, "temp_out", "temp_out"),
         buildDallasSensor(D6, newIn, 10000, "temp_in", "temp_in"),
         buildDallasSensor(D6, newOut, 10000, "temp_out", "temp_out"),
-        buildDhtSensor(D3, 11, 10000, "hum_in", "hum_in"),
+        buildDhtSensor(D3, 22, 10000, "hum_in", "hum_in"),
         buildCo2SenseairSensor(D7, D8, 10000, "co2", "co2"),
         buildUptimeSensor(10000, "uptime", "uptime"),
         buildBuildVersionSensor(10000, "build_version", "build_version"),
