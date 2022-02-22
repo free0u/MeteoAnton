@@ -1,6 +1,6 @@
 #arctic
 #wave
-#opus
+opus
 #dino
 #columbus
 #sunny

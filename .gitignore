@@ -4,3 +4,4 @@ creds/Tokens.h
 uploadFirmwareToServer
 *.code-workspace
 .DS_Store
+deploy.sh

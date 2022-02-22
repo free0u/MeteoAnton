@@ -37,7 +37,7 @@
 // }
 
 // utils
-EspSaveCrash SaveCrash;  // some steps in ctor, but OK
+EspSaveCrash SaveCrash;
 Led led;
 CheckTime checkTimeClass;
 OTAUpdate otaUpdate;
