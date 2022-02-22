@@ -8,7 +8,8 @@
 
 class WiFiConfig {
    private:
-    WiFiManager wifiManager;
+    WiFiManager* wifiManager;
+    bool wifiManagerIsInited = false;
 
    public:
     WiFiConfig() {}
@@ -38,9 +39,14 @@ class WiFiConfig {
     // }
 
     void startPortal() {
-        wifiManager.resetSettings();
-        wifiManager.setConfigPortalTimeout(240);
-        wifiManager.startConfigPortal("NodeMCU-free0u");
+        if (!wifiManagerIsInited) {
+            wifiManager = new WiFiManager();
+            wifiManagerIsInited = true;
+        }
+
+        wifiManager->resetSettings();
+        wifiManager->setConfigPortalTimeout(240);
+        wifiManager->startConfigPortal("NodeMCU-free0u");
     }
 };
 
