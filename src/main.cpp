@@ -22,6 +22,7 @@
 #include "system/Timing.h"
 #include "system/Timing2.h"
 #include "system/WiFiConfig.h"
+
 #define WEBSERVER_H
 #include "ESPAsyncWebServer.h"
 AsyncWebServer server(80);
@@ -79,7 +80,6 @@ void recover() {
         }
         delay(200);
     }
-    led.off();
 
     if (pressed) {
         for (int i = 0; i < 10; i++) {
@@ -88,13 +88,11 @@ void recover() {
         }
         Serial.println("Starting wifi portal...");
         wifiConfig.startPortal();
-    }
-    led.off();
 
-    // led.on();
-    WiFiClient client;
-    ESPhttpUpdate.update(client, RECOVER_FIRMWARE_URL + String(ESP.getChipId()));
-    // led.off();
+        WiFiClient client;
+        ESPhttpUpdate.update(client, RECOVER_FIRMWARE_URL + String(ESP.getChipId()));
+    }
+
     Serial.println("Recover end");
 }
 
@@ -103,19 +101,23 @@ String makeCrash();
 String clearCrash();
 
 void initSensors();
+void processInternetUpdate(String const& device, String const& version, bool sendLog);
 
 void setup() {
     Serial.begin(115200);
     pinMode(BUTTON, INPUT_PULLUP);
-    led.off();
-
-    // TODO think about recover
+    led.init(D4);
     recover();
 
     int chipId = ESP.getChipId();
     Serial.printf("\nChipId: %d", chipId);
-
     config = getDeviceConfigById(chipId);
+
+    if (wifiConfig.connect(config.deviceName)) {
+        led.off();
+        Serial.println("after connect");
+        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), false);
+    }
 
     _debugOutputBuffer = (char*)calloc(2048, sizeof(char));
     SaveCrash.print();
@@ -126,12 +128,9 @@ void setup() {
     meteoLog.add("Booting...");
 
     // setup wifi connection
-    led.on();
-    meteoLog.add("Connecting to WiFi...");
-    if (wifiConfig.connect(config.deviceName)) {
-        led.off();
-        // processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
-    }
+    // led.on();
+    // meteoLog.add("Connecting to WiFi...");
+    // wifi was here
 
     meteoLog.add("WiFi connected");
     meteoLog.add("IP address: " + WiFi.localIP().toString());
@@ -151,6 +150,20 @@ void setup() {
               [](AsyncWebServerRequest* request) { request->send(200, "text/plain", clearCrash()); });
     server.on("/makeCrash", HTTP_GET,
               [](AsyncWebServerRequest* request) { request->send(200, "text/plain", makeCrash()); });
+
+    server.on("/led", HTTP_GET, [](AsyncWebServerRequest* request) {
+        String inputMessage;
+        // GET input1 value on <ESP_IP>/slider?value=<inputMessage>
+        if (request->hasParam("value")) {
+            inputMessage = request->getParam("value")->value();
+            analogWrite(D4, inputMessage.toInt());
+        } else {
+            inputMessage = "No message sent";
+        }
+        Serial.println(inputMessage);
+        // Serial.println(PWMRANGE);
+        request->send(200, "text/plain", "OK");
+    });
     server.begin();
 
     // configure and start OTA update server
@@ -200,24 +213,31 @@ void setup() {
     meteoLog.add(String(WiFi.macAddress()));
 }
 
-void processInternetUpdate(String const& device, String const& version) {
+void processInternetUpdate(String const& device, String const& version, bool sendLog) {
     ESPhttpUpdate.setLedPin(D4, LOW);
     WiFiClient client;
     String url = REGULAR_UPDATE_FIRMWARE_URL + device + "&version=" + version;
     t_httpUpdate_return ret = ESPhttpUpdate.update(client, url);
     switch (ret) {
         case HTTP_UPDATE_FAILED:
-            meteoLog.add("[update] Update failed.");
+            if (sendLog) {
+                meteoLog.add("[update] Update failed.");
+            }
             Serial.printf("HTTP_UPDATE_FAILD Error (%d): %s\n", ESPhttpUpdate.getLastError(),
                           ESPhttpUpdate.getLastErrorString().c_str());
             break;
         case HTTP_UPDATE_NO_UPDATES:
-            meteoLog.add("[update] Update no Update.");
+            if (sendLog) {
+                meteoLog.add("[update] Update no Update.");
+            }
             break;
         case HTTP_UPDATE_OK:
-            meteoLog.add("[update] Update ok.");  // may not be called since we reboot the ESP
+            if (sendLog) {
+                meteoLog.add("[update] Update ok.");  // may not be called since we reboot the ESP
+            }
             break;
     }
+    led.off();
 }
 
 String getCrash() {
@@ -720,7 +740,7 @@ void loop() {
         maxUpdateSensorTime = 0;
 
         meteoLog.add("Trying to update firmware...");
-        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION));
+        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), true);
         timeTestDiffCheck("after processInternetUpdate");
 
         meteoLog.sendLog(config.deviceName, SEND_LOG_URL);

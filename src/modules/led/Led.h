@@ -1,29 +1,32 @@
 #ifndef LED_H
 #define LED_H
 
-#define LED D4
-
 class Led {
    private:
-    bool ledIsOn = false;
-
-   public:
-    Led() { pinMode(LED, OUTPUT); }
-    void on() {
-        // digitalWrite(LED, LOW);
-        analogWrite(LED, 1010);
-        ledIsOn = true;
-    }
+    uint8_t pin;
+    bool ledIsOn;
 
     void on(int x) {
-        analogWrite(LED, x);
+        analogWrite(pin, x);
         ledIsOn = true;
     }
 
+   public:
+    Led() {}
+
+    void init(uint8_t _pin) {
+        pin = _pin;
+        pinMode(pin, OUTPUT);
+        off();
+    }
+
+    void on() { on(254); }
+
     void off() {
-        digitalWrite(LED, HIGH);
+        digitalWrite(pin, HIGH);
         ledIsOn = false;
     }
+
     void change() {
         if (ledIsOn) {
             off();
