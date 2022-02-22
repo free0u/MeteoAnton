@@ -40,7 +40,7 @@ Led led;
 CheckTime checkTimeClass;
 OTAUpdate otaUpdate;
 MeteoLog meteoLog;
-Timing timing;
+// Timing timing;
 Timing2 timing2;
 // configs
 WiFiConfig wifiConfig;
@@ -102,20 +102,20 @@ String clearCrash();
 
 void initSensors();
 void processInternetUpdate(String const& device, String const& version, bool sendLog);
+void setupHandles();
 
 void setup() {
     Serial.begin(115200);
-    pinMode(BUTTON, INPUT_PULLUP);
-    led.init(D4);
+    pinMode(BUTTON, INPUT_PULLUP);  // flash button
+    led.init(D4);                   // inner led
     recover();
 
     int chipId = ESP.getChipId();
-    Serial.printf("\nChipId: %d", chipId);
+    Serial.printf("\n\nChipId: %d\n\n", chipId);
     config = getDeviceConfigById(chipId);
 
     if (wifiConfig.connect(config.deviceName)) {
         led.off();
-        Serial.println("after connect");
         processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), false);
     }
 
@@ -123,48 +123,9 @@ void setup() {
     SaveCrash.print();
     SaveCrash.clear();
 
-    // setup log
     meteoLog.init();
     meteoLog.add("Booting...");
-
-    // setup wifi connection
-    // led.on();
-    // meteoLog.add("Connecting to WiFi...");
-    // wifi was here
-
-    meteoLog.add("WiFi connected");
     meteoLog.add("IP address: " + WiFi.localIP().toString());
-
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
-        // request->send(200, "text/plain", "123");
-        request->send(200, "text/plain",
-                      "millis: " + String(millis()) + "\n" + "Sensors-Names: " + sensorsData.sensorsNames + "\n" +
-                          "Sensors: " + sensorsData.serialize());
-    });
-
-    server.on("/crash", HTTP_GET, [](AsyncWebServerRequest* request) {
-        // request->send(200, "text/plain", "123");
-        request->send(200, "text/plain", getCrash());
-    });
-    server.on("/clearCrash", HTTP_GET,
-              [](AsyncWebServerRequest* request) { request->send(200, "text/plain", clearCrash()); });
-    server.on("/makeCrash", HTTP_GET,
-              [](AsyncWebServerRequest* request) { request->send(200, "text/plain", makeCrash()); });
-
-    server.on("/led", HTTP_GET, [](AsyncWebServerRequest* request) {
-        String inputMessage;
-        // GET input1 value on <ESP_IP>/slider?value=<inputMessage>
-        if (request->hasParam("value")) {
-            inputMessage = request->getParam("value")->value();
-            analogWrite(D4, inputMessage.toInt());
-        } else {
-            inputMessage = "No message sent";
-        }
-        Serial.println(inputMessage);
-        // Serial.println(PWMRANGE);
-        request->send(200, "text/plain", "OK");
-    });
-    server.begin();
 
     // configure and start OTA update server
     meteoLog.add("OTA server init...");
@@ -180,9 +141,9 @@ void setup() {
     // }
 
     // NTP and RTC
-    meteoLog.add("NTP/RTC init...");
-    timing.init(&meteoLog);
-    meteoLog.add("NTP/RTC init... Done");
+    // meteoLog.add("NTP/RTC init...");
+    // timing.init(&meteoLog);
+    // meteoLog.add("NTP/RTC init... Done");
 
     meteoLog.add("Timing 2...");
     timing2.init(&meteoLog);
@@ -211,6 +172,39 @@ void setup() {
 
     meteoLog.add(" *********** NEW ESP8266 MAC:  *********** ");
     meteoLog.add(String(WiFi.macAddress()));
+
+    setupHandles();
+}
+
+void setupHandles() {
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+        // request->send(200, "text/plain", "123");
+        request->send(200, "text/plain",
+                      "millis: " + String(millis()) + "\n" + "Sensors-Names: " + sensorsData.sensorsNames + "\n" +
+                          "Sensors: " + sensorsData.serialize());
+    });
+
+    server.on("/crash", HTTP_GET, [](AsyncWebServerRequest* request) {
+        // request->send(200, "text/plain", "123");
+        request->send(200, "text/plain", getCrash());
+    });
+    server.on("/clearCrash", HTTP_GET,
+              [](AsyncWebServerRequest* request) { request->send(200, "text/plain", clearCrash()); });
+    server.on("/makeCrash", HTTP_GET,
+              [](AsyncWebServerRequest* request) { request->send(200, "text/plain", makeCrash()); });
+
+    server.on("/led", HTTP_GET, [](AsyncWebServerRequest* request) {
+        String inputMessage;
+        if (request->hasParam("value")) {
+            inputMessage = request->getParam("value")->value();
+            analogWrite(D4, inputMessage.toInt());
+        } else {
+            inputMessage = "No message sent";
+        }
+        Serial.println(inputMessage);
+        request->send(200, "text/plain", "OK");
+    });
+    server.begin();
 }
 
 void processInternetUpdate(String const& device, String const& version, bool sendLog) {
@@ -267,10 +261,6 @@ long maxUpdateSensorTime = 0;
 
 void initSensors() {
     meteoLog.add("SensorsData init...");
-    // sensorsUpdateTime = new long[config.sensorsCount];
-    // for (int i = 0; i < config.sensorsCount; i++) {
-    //     sensorsUpdateTime[i] = -1e9;
-    // }
     checkTimeClass.initSensorUpdateTime(config.sensorsCount);
     sensorsData.init(config.sensors, config.sensorsCount);
 
