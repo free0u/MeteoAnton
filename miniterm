@@ -129,14 +129,14 @@ class ESPStackDecoder(miniterm.Transform):
   def addr2line(self, addrs):
     if len(addrs) == 0:
       return ""
-    output = subprocess.check_output([os.environ["HOME"] + "/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-addr2line", "-aipfC", "-e", ".pio/build/nodemcuv2/firmware.elf"] + addrs)
+    output = subprocess.check_output([os.environ["HOME"] + "/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-addr2line", "-aipfC", "-e", ".pio/build/nodemcuv2-dimple/firmware.elf"] + addrs)
     return output
 
 miniterm.TRANSFORMATIONS['espstackdecoder'] = ESPStackDecoder
 
 #miniterm.main(default_port="/dev/ttyUSB0", default_baudrate=115200)
 serial_instance = serial.serial_for_url(
-                "/dev/cu.wchusbserial1a1240",
+                "/dev/cu.wchusbserial1d1120",
                 115200,
                 do_not_open = True)
 

@@ -327,7 +327,8 @@ void initSensors() {
                 break;
             case POWER_SPENT:
                 // powerSpent = 0;
-                powerSpent = electroSensorStorage.get();
+                electroSensorStorage.init(&emonSensor, &meteoLog);
+                // powerSpent = electroSensorStorage.get();
                 break;
             case WATER_SPENT:
                 pinMode(sensorConfig.pin1, INPUT);
@@ -340,7 +341,7 @@ void initSensors() {
     }
     meteoLog.add("SensorsData init... Done");
 
-    meteoLog.add("electroSensorStorage init read: " + String(powerSpent));
+    meteoLog.add("electroSensorStorage init read: " + String(electroSensorStorage.get2()));
     meteoLog.add("waterSensorStorage init read: " + String(waterSpent));
 }
 
@@ -399,7 +400,8 @@ float readSensor(SensorConfig& sensorConfig) {
         // case POWER_SUM:
         //     return NAN;
         case POWER_SPENT:
-            return powerSpent;
+            return electroSensorStorage.get2();
+            // return powerSpent;
         case WATER_SPENT:
             return waterSpent;
         case MAX_LOOP_TIME:
@@ -602,59 +604,37 @@ void loop() {
     int SMALL_INTERVAL = 3000;
     // if (checkTime(timeIrmsSumSpend OK, SMALL_INTERVAL) && hasIrmsSensor) {
     if (checkTimeClass.checkIrmsSumSpend(SMALL_INTERVAL) && hasIrmsSensor) {
-        float res = electroSensorStorage.save(powerSpent);
-        meteoLog.add("electroSensorStorage init write: " + String(powerSpent) + " res: " + String(res));
-        long ts = millis();
+        electroSensorStorage.processInterval();
 
-        meteoLog.add("IRMSsum start. Since last: " + String(ts - irmsSumSpentSmallTimestamp));
-        // rxtx.send(cnt433, config.deviceName);
-        // meteoLog.add("433 SENT !!!");
+        // float res = electroSensorStorage.save(powerSpent);
+        // meteoLog.add("electroSensorStorage init write: " + String(powerSpent) + " res: " + String(res));
+        // long ts = millis();
 
-        long st = millis();
-        float power = emonSensor.power();
-        long timeWork = millis() - st;
+        // meteoLog.add("IRMSsum start. Since last: " + String(ts - irmsSumSpentSmallTimestamp));
+        // // rxtx.send(cnt433, config.deviceName);
+        // // meteoLog.add("433 SENT !!!");
 
-        if (ts - irmsSumSpentSmallTimestamp < 6000) {
-            // long deltaKw = power - irmsSumSpentSmallValue;
-            float avgKw = (power + irmsSumSpentSmallValue) / 2;
-            meteoLog.add("IRMSsum avgWatt: " + String(avgKw));
-            float kwSpent = avgKw / 60 / 60 * ((ts - irmsSumSpentSmallTimestamp) / 1000.0);
-            irmsSumSpentIntervalSumValue += kwSpent;
+        // long st = millis();
+        // float power = emonSensor.power();
+        // long timeWork = millis() - st;
 
-            powerSpent += kwSpent;
+        // if (ts - irmsSumSpentSmallTimestamp < 6000) {
+        //     // long deltaKw = power - irmsSumSpentSmallValue;
+        //     float avgKw = (power + irmsSumSpentSmallValue) / 2;
+        //     meteoLog.add("IRMSsum avgWatt: " + String(avgKw));
+        //     float kwSpent = avgKw / 60 / 60 * ((ts - irmsSumSpentSmallTimestamp) / 1000.0);
+        //     irmsSumSpentIntervalSumValue += kwSpent;
 
-            // meteoLog.add("IRMSsum deltaKw: " + String(deltaKw));
-            meteoLog.add("IRMSsum wattSpent: " + String(kwSpent));
-        }
+        //     powerSpent += kwSpent;
 
-        // if (ts - irmsSumSpentIntervalSumTimestamp > 30000 && ts - irmsSumSpentIntervalSumTimestamp < 300000) {
-        //     meteoLog.add("IRMSsum sum: " + String(irmsSumSpentIntervalSumValue));
-        //     meteoLog.add("IRMSsum sum time: " + String(ts - irmsSumSpentIntervalSumTimestamp));
-
-        //     for (int i = 0; i < config.sensorsCount; i++) {
-        //         SensorConfig& sensorConfig = config.sensors[i];
-        //         Sensor& sensorData = sensorsData.sensors[i];
-
-        //         if (sensorConfig.type != POWER_SUM) {
-        //             continue;
-        //         }
-
-        //         float value = irmsSumSpentIntervalSumValue;
-        //         meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.debug_name) + " read: " + value);
-        //         sensorData.set(value, now());
-        //     }
-
-        //     irmsSumSpentIntervalSumValue = 0;
-        //     irmsSumSpentIntervalSumTimestamp = ts;
-        // } else if (ts - irmsSumSpentIntervalSumTimestamp > 300000) {
-        //     irmsSumSpentIntervalSumValue = 0;
-        //     irmsSumSpentIntervalSumTimestamp = ts;
+        //     // meteoLog.add("IRMSsum deltaKw: " + String(deltaKw));
+        //     meteoLog.add("IRMSsum wattSpent: " + String(kwSpent));
         // }
 
-        irmsSumSpentSmallTimestamp = ts;
-        irmsSumSpentSmallValue = power;
+        // irmsSumSpentSmallTimestamp = ts;
+        // irmsSumSpentSmallValue = power;
 
-        meteoLog.add("IRMSsum, time spent: " + String(timeWork));
+        // meteoLog.add("IRMSsum, time spent: " + String(timeWork));
     }
 
     if (hasReceiver433) {

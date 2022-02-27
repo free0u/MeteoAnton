@@ -6,5 +6,5 @@
 77:chel_osmos
 77:chel_flaner
 80:chel
-75:moxovich
-74:moxovich_second
+81:moxovich
+81:moxovich_second
