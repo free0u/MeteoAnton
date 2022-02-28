@@ -65,7 +65,10 @@ class SensorsData {
 
     SensorsData() {}
 
-    void init(SensorConfig* sensorsConfig, int count) {
+    // void init(SensorConfig* sensorsConfig, int count) {
+    void init(std::vector<SensorConfig> const& sensorsConfig) {
+        int count = sensorsConfig.size();
+
         this->sensorsCount = count;
         sensors = new Sensor[count];
         for (int i = 0; i < count; i++) {

@@ -266,7 +266,7 @@ long maxUpdateSensorTime = 0;
 void initSensors() {
     meteoLog.add("SensorsData init...");
     checkTime.initSensorUpdateTime(config.sensorsCount);
-    sensorsData.init(config.sensors, config.sensorsCount);
+    sensorsData.init(config.sensors);
 
     for (int i = 0; i < config.sensorsCount; i++) {
         SensorConfig& sensorConfig = config.sensors[i];

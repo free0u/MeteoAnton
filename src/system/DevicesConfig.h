@@ -39,7 +39,8 @@ struct SensorConfig {
 };
 
 struct DeviceConfig {
-    SensorConfig* sensors;
+    // SensorConfig* sensors;
+    std::vector<SensorConfig> sensors;
     int sensorsCount;
     String deviceName;  // Columbus, Wave, Dino
     String sensorsApiUrl;
@@ -285,8 +286,7 @@ DeviceConfig getDinoConfig() {
     // 28 44 04 A7 33 14 01 34
     DeviceAddress addrDino = {0x28, 0x44, 0x04, 0xA7, 0x33, 0x14, 0x01, 0x34};
 
-    const int SENSORS_COUNT = 6;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildDallasSensor(D6, addrDino, 10000, "temp_in", "dallas1"),
         buildDhtSensor(D5, 22, 10000, "hum_in", "hum_in"),
         buildUptimeSensor(10000, "uptime", "uptime"),
@@ -294,7 +294,8 @@ DeviceConfig getDinoConfig() {
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -314,8 +315,7 @@ DeviceConfig getColumbusConfig() {
     // 2841F7E9090000FF
     DeviceAddress addrTempIn = {0x28, 0x41, 0xF7, 0xE9, 0x09, 0x00, 0x00, 0xFF};
 
-    const int SENSORS_COUNT = 6;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildDallasSensor(D7, addrTempIn, 10000, "temp_in", "dallas1"),
         buildDallasSensor(D7, addrTempOut, 10000, "temp_out", "dallas2"),
         // buildBme280Sensor(D3, D5, {0x76}, 10000, "hum_in", "hum_in"),
@@ -324,7 +324,8 @@ DeviceConfig getColumbusConfig() {
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -339,8 +340,7 @@ DeviceConfig getWaveConfig() {
     // 286CA5250A0000DA
     DeviceAddress addrTempIn = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
 
-    const int SENSORS_COUNT = 7;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildDallasSensor(D6, addrTempIn, 10000, "temp_in", "dallas1"),
         buildDhtSensor(D1, 22, 10000, "hum_in", "hum_in"),
         buildCo2SenseairSensor(D7, D8, 10000, "co2", "co2"),
@@ -349,7 +349,8 @@ DeviceConfig getWaveConfig() {
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -385,8 +386,7 @@ address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9 2021-
     //         buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in")
     // }
 
-    const int SENSORS_COUNT = 11;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in"),
         buildDallasSensor(D6, newOut, 10000, "temp_out", "temp_out"),
         // buildTransmitter433Sensor(20, D5, 21, 10000, "transmitter_433", "transmitter_433"),
@@ -400,7 +400,9 @@ address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9 2021-
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"), buildRssiSensor(10000, "rssi", "rssi"),
         buildMaxLoopTimeSensor(10000, "max_loop_time", "max_loop_time"),
         buildUpdateSensorTimeSensor(10000, "max_update_sensor_time", "max_update_sensor_time")};
-    config.sensorsCount = SENSORS_COUNT;
+
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -416,8 +418,7 @@ DeviceConfig getSunnyConfig() {
     // DeviceAddress addrTemp1 = {0x28, 0xEC, 0xBE, 0x26, 0x0A, 0x00, 0x00, 0xB4};
     // DeviceAddress addrTemp2 = {0x28, 0xAA, 0x7A, 0xB3, 0x1A, 0x13, 0x02, 0x61};
 
-    const int SENSORS_COUNT = 6;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         // buildDallasSensor(D6, addrTemp1, 10000, "temp1", "dallas1"),
         // buildDallasSensor(D6, addrTemp2, 10000, "temp2", "dallas2"),
         // buildDhtSensor(D1, 10000, "hum_in", "hum_in"),
@@ -429,7 +430,8 @@ DeviceConfig getSunnyConfig() {
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -453,8 +455,7 @@ DeviceConfig getChelConfig() {
     // 28616411BDD852B6
     // DeviceAddress addrTempIn = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
 
-    const int SENSORS_COUNT = 8;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         // buildDallasSensor(D6, addrTempIn, 10000, "temp_in", "temp_in"),
         // buildDallasSensor(D6, addrTempInBak, 10000, "temp_in_bak", "temp_in_bak"),
         // buildDallasSensor(D6, addrTempOut, 10000, "temp_out", "temp_out"),
@@ -467,7 +468,8 @@ DeviceConfig getChelConfig() {
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -482,8 +484,7 @@ DeviceConfig getArcticConfig() {
     DeviceAddress newOut = {0x28, 0xFF, 0x6E, 0x31, 0x20, 0x18, 0x01, 0x6C};
     // DeviceAddress newIn = {0x28, 0xFF, 0x1D, 0xD6, 0x65, 0x18, 0x03, 0x38};
 
-    const int SENSORS_COUNT = 5;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         // buildDallasSensor(D6, newIn, 10000, "temp_in", "temp_in"),
         buildDallasSensor(D6, newOut, 10000, "temp_out", "temp_out"),
         buildUptimeSensor(10000, "uptime", "uptime"),
@@ -491,7 +492,8 @@ DeviceConfig getArcticConfig() {
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -506,8 +508,7 @@ DeviceConfig getMoxovichConfig() {
     DeviceAddress addrTempParilka = {0x28, 0xB0, 0xF8, 0x75, 0xD0, 0x01, 0x3C, 0x68};
     DeviceAddress addrTempMoxOut = {0x28, 0x5C, 0xCF, 0x95, 0xF0, 0x01, 0x3C, 0x34};
 
-    const int SENSORS_COUNT = 7;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildDallasSensor(D1, addrTempParilka, 10000, "temp_in", "temp_in"),  // парилка
         buildDallasSensor(D1, addrTempMoxOut, 10000, "temp_out", "temp_out"),
         buildUptimeSensor(10000, "uptime", "uptime"),
@@ -516,7 +517,8 @@ DeviceConfig getMoxovichConfig() {
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
         buildRssiSensor(10000, "rssi", "rssi"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -530,8 +532,7 @@ DeviceConfig getMoxovichSecondConfig() {
 
     DeviceAddress addrTempParilka = {0x28, 0x66, 0x8D, 0x75, 0xD0, 0x01, 0x3C, 0xA1};
 
-    const int SENSORS_COUNT = 6;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildDallasSensor(D1, addrTempParilka, 10000, "temp_in", "temp_in"),  // парилка
         buildUptimeSensor(10000, "uptime", "uptime"),
         buildBuildVersionSensor(10000, "build_version", "build_version"),
@@ -539,7 +540,8 @@ DeviceConfig getMoxovichSecondConfig() {
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
         buildRssiSensor(10000, "rssi", "rssi"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -553,8 +555,7 @@ DeviceConfig getDimpleConfig() {
 
     DeviceAddress addrTempIn1 = {0x28, 0xFF, 0x64, 0x01, 0xB0, 0x6D, 0x5F, 0x3C};
 
-    const int SENSORS_COUNT = 8;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         // buildTransmitter433Sensor(20, D5, 21, 10000, "transmitter_433", "transmitter_433"),
         // buildReceiver433Sensor(D5, 20, 21, 10000, "receiver_433", "receiver_433"),
         // buildIrmsSensor(30, 210, 10000, "irms", "irms"),
@@ -567,7 +568,8 @@ DeviceConfig getDimpleConfig() {
         buildUptimeSensor(10000, "uptime", "uptime"), buildBuildVersionSensor(10000, "build_version", "build_version"),
         buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"), buildRssiSensor(10000, "rssi", "rssi")};
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -585,8 +587,7 @@ DeviceConfig getChelFlanerConfig() {
     DeviceAddress addrTempIn3 = {0x28, 0xFF, 0x42, 0x75, 0xD0, 0x01, 0x3C, 0xCB};
     // DeviceAddress addrTempIn4 = {0x28, 0x66, 0x8D, 0x75, 0xD0, 0x01, 0x3C, 0xA1};
 
-    const int SENSORS_COUNT = 9;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildDhtSensor(D6, 11, 10000, "hum_in", "hum_in"),
         buildDallasSensor(D1, addrTempIn, 10000, "temp_in", "temp_in"),
         // buildDallasSensor(D1, addrTempIn1, 10000, "temp_in1", "temp_in1"),
@@ -600,7 +601,8 @@ DeviceConfig getChelFlanerConfig() {
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
         buildRssiSensor(10000, "rssi", "rssi"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -612,8 +614,7 @@ DeviceConfig getChelOsmosConfig() {
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
-    const int SENSORS_COUNT = 6;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{
+    std::vector<SensorConfig> sensorConfigs = {
         buildWaterSpentSensor(D2, 10000, "water_spent", "water_spent"),
         buildUptimeSensor(10000, "uptime", "uptime"),
         buildBuildVersionSensor(10000, "build_version", "build_version"),
@@ -621,7 +622,8 @@ DeviceConfig getChelOsmosConfig() {
         buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
         buildRssiSensor(10000, "rssi", "rssi"),
     };
-    config.sensorsCount = SENSORS_COUNT;
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
@@ -633,8 +635,9 @@ DeviceConfig getStubConfig() {
     config.logSendTimeout = 1e9;
 
     const int SENSORS_COUNT = 0;
-    config.sensors = new SensorConfig[SENSORS_COUNT]{};
-    config.sensorsCount = SENSORS_COUNT;
+    std::vector<SensorConfig> sensorConfigs = {};
+    config.sensors = sensorConfigs;
+    config.sensorsCount = sensorConfigs.size();
 
     return config;
 }
