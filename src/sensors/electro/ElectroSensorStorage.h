@@ -37,7 +37,6 @@ class ElectroSensorStorage {
         dataFile.close();
 
         return value;
-        // return getFromFs();
     }
 
    public:
@@ -53,7 +52,7 @@ class ElectroSensorStorage {
         isInited = true;
     }
 
-    float get2() { return powerSpent; }
+    float getPowerSpent() { return powerSpent; }
 
     void processInterval() {
         long tsNow = millis();
@@ -72,36 +71,6 @@ class ElectroSensorStorage {
 
         lastTs = tsNow;
         lastPower = curPower;
-
-        // // -------------
-        // float res = electroSensorStorage.save(powerSpent);
-        // meteoLog.add("electroSensorStorage init write: " + String(powerSpent) + " res: " + String(res));
-        // long ts = millis();
-
-        // meteoLog.add("IRMSsum start. Since last: " + String(ts - irmsSumSpentSmallTimestamp));
-
-        // long st = millis();
-        // float power = emonSensor.power();
-        // long timeWork = millis() - st;
-
-        // if (ts - irmsSumSpentSmallTimestamp < 6000) {
-        //     float avgKw = (power + irmsSumSpentSmallValue) / 2;
-        //     meteoLog.add("IRMSsum avgWatt: " + String(avgKw));
-        //     float kwSpent = avgKw / 60 / 60 * ((ts - irmsSumSpentSmallTimestamp) / 1000.0);
-        //     irmsSumSpentIntervalSumValue += kwSpent;
-
-        //     powerSpent += kwSpent;
-
-        //     // meteoLog.add("IRMSsum deltaKw: " + String(deltaKw));
-        //     meteoLog.add("IRMSsum wattSpent: " + String(kwSpent));
-        // }
-
-        // irmsSumSpentSmallTimestamp = ts;
-        // irmsSumSpentSmallValue = power;
-
-        // meteoLog.add("IRMSsum, time spent: " + String(timeWork));
-
-        // return;
     }
 };
 

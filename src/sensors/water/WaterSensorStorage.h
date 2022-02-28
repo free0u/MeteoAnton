@@ -35,7 +35,6 @@ class WaterSensorStorage {
         dataFile.close();
 
         return value;
-        // return get();
     }
 
    public:
@@ -52,7 +51,7 @@ class WaterSensorStorage {
         isInited = true;
     }
 
-    float get2() { return waterSpent; }
+    float getWaterSpent() { return waterSpent; }
 
     void processInterval() {
         int newButtonState = digitalRead(pin);
@@ -66,20 +65,14 @@ class WaterSensorStorage {
                     waterButtonState = newButtonState;
 
                     waterSpent += 5;
-                    // led.change();
                     log->add("===== Water Sensor: add 5 liters. total: " + String(waterSpent));
 
                     saveToFs(waterSpent);
                 }
             }
         }
-
-        log->add("===== Water Sensor button: " + String(newButtonState));
-        log->add("===== Water Sensor total: " + String(waterSpent));
-
-        // float value = electroSensorStorage.get();
-        // meteoLog.add("electroSensorStorage: " + String(value));
-        // electroSensorStorage.save(value + 1);
+        // log->add("===== Water Sensor button: " + String(newButtonState));
+        // log->add("===== Water Sensor total: " + String(waterSpent));
     }
 };
 

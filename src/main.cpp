@@ -39,7 +39,7 @@
 // utils
 EspSaveCrash SaveCrash;
 Led led;
-CheckTime checkTimeClass;
+CheckTime checkTime;
 OTAUpdate otaUpdate;
 MeteoLog meteoLog;
 WebApi webApi;
@@ -259,16 +259,13 @@ String clearCrash() {
     return "cleared";
 }
 
-float powerSpent = -1e9;
-float waterSpent = -1e9;
-
 long lastLoopTimeStamp = 0;
 long maxLoopTime = 0;
 long maxUpdateSensorTime = 0;
 
 void initSensors() {
     meteoLog.add("SensorsData init...");
-    checkTimeClass.initSensorUpdateTime(config.sensorsCount);
+    checkTime.initSensorUpdateTime(config.sensorsCount);
     sensorsData.init(config.sensors, config.sensorsCount);
 
     for (int i = 0; i < config.sensorsCount; i++) {
@@ -307,12 +304,6 @@ void initSensors() {
                     hasReceiver433 = true;
                 }
                 break;
-            // case BME_SENSOR:
-            //     meteoLog.add("BME280 init...");
-            //     Wire.begin(sensorConfig.pin1, sensorConfig.pin2);
-            //     bme.init(sensorConfig.address[0]);
-            //     meteoLog.add("BME280 init... Done");
-            //     break;
             case IRMS_SENSOR:
                 meteoLog.add("EmonLib Irms init...");
                 emonSensor.init(sensorConfig.param1, sensorConfig.param2);
@@ -326,50 +317,21 @@ void initSensors() {
                 hasIrmsSensor = true;
                 break;
             case POWER_SPENT:
-                // powerSpent = 0;
+                hasIrmsSensor = true;
                 electroSensorStorage.init(&emonSensor, &meteoLog);
-                // powerSpent = electroSensorStorage.get();
                 break;
             case WATER_SPENT:
                 hasWaterSensor = true;
-                // waterSpent = 0;
-                // waterSensorStorage.save(0);
-                // waterSpent = waterSensorStorage.get();
                 waterSensorStorage.init(sensorConfig.pin1, &meteoLog);
+                break;
             default:;
         }
     }
     meteoLog.add("SensorsData init... Done");
 
-    meteoLog.add("electroSensorStorage init read: " + String(electroSensorStorage.get2()));
-    meteoLog.add("===== Water Sensor init read: " + String(waterSensorStorage.get2()));
+    meteoLog.add("electroSensorStorage init read: " + String(electroSensorStorage.getPowerSpent()));
+    meteoLog.add("===== Water Sensor init read: " + String(waterSensorStorage.getWaterSpent()));
 }
-
-// timers
-// long timeButtonPress = 0;
-long timeScanCo21 = -1e9;
-long timeScanCo22 = -1e9;
-// long time433Send = -1e9;
-// long timeIrmsSumSpend = -1e9;
-long rtcTimeUpdate = -RTC_TIME_UPDATE_TIMEOUT;
-long sensorsDataUpdated = -1e9;
-long dhtSensorUpdated = -1e9;
-
-// irms
-long irmsSumSpentIntervalSumTimestamp = -1e9;
-float irmsSumSpentIntervalSumValue = 0;
-long irmsSumSpentSmallTimestamp = -1e9;
-float irmsSumSpentSmallValue = 0;
-
-int buttonCount = 0;
-
-// bool checkTime2(long& ts, long unsigned delay) {
-//     if (millis() - ts > delay) {
-//         ts = millis();
-//         return true;
-//     }
-//     return false;
-// }
 
 float readSensor(SensorConfig& sensorConfig) {
     switch (sensorConfig.type) {
@@ -385,8 +347,6 @@ float readSensor(SensorConfig& sensorConfig) {
             return WiFi.RSSI();
         case DALLAS_SENSOR:
             return temp.getTemp(sensorConfig.address);
-        // case BME_SENSOR:
-        //     return bme.humidity();
         case DHT_SENSOR:
             return dht.humidity();
         case DHT_SENSOR_TEMP:
@@ -400,11 +360,9 @@ float readSensor(SensorConfig& sensorConfig) {
         // case POWER_SUM:
         //     return NAN;
         case POWER_SPENT:
-            return electroSensorStorage.get2();
-            // return powerSpent;
+            return electroSensorStorage.getPowerSpent();
         case WATER_SPENT:
-            // return waterSpent;
-            return waterSensorStorage.get2();
+            return waterSensorStorage.getWaterSpent();
         case MAX_LOOP_TIME:
             return maxLoopTime > 0 ? maxLoopTime : NAN;
         case UPDATE_SENSORS_TIME:
@@ -429,18 +387,10 @@ void tryUpdateSensors() {
         SensorConfig& sensorConfig = config.sensors[i];
         Sensor& sensorData = sensorsData.sensors[i];
 
-        // if (sensorConfig.type == POWER_SUM) {
-        //     continue;
-        //     // сенсор обновляется в другом месте, когда приходит следующий интервал суммирования watt
-        // }
-
-        timeTestDiffCheck("before " + sensorConfig.debug_name);
-        // if (checkTime2(sensorsUpdateTime[i], sensorConfig.timeout)) {
-        if (checkTimeClass.checkSensorByInd(i, sensorConfig.timeout)) {
+        if (checkTime.checkSensorByInd(i, sensorConfig.timeout)) {
             float value = readSensor(sensorConfig);
             meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.debug_name) + " read: " + value);
             sensorData.set(value, now());
-            timeTestDiffCheck("after " + sensorConfig.debug_name);
         }
     }
 }
@@ -449,11 +399,6 @@ int sendDataApi(bool reallySend) {
     meteoLog.add("Sending data...");
 
     if (reallySend) {
-        // http.begin("http://ya.ru");
-        // http.setTimeout(10000);
-        // http.GET();
-        // http.end();
-
         WiFiClient client;
         HTTPClient http;
         http.begin(client, config.sensorsApiUrl);
@@ -478,8 +423,6 @@ int sendDataApi(bool reallySend) {
     }
 }
 
-long dumpJsonTime = -1e9;
-
 // TODO make handle to switch
 bool wifiOn() {
     return true;
@@ -495,32 +438,9 @@ bool wifiOn() {
     return minutes % 2 == 0;
 }
 
-long stt = millis();
-bool is_calib = false;
-// bool is_calib = true;
-
-int cnt2 = 0;
-
-int num = 0;
 int cacheCount = 0;
-
 int cnt433 = 0;
-
-// void clearIrmsSensorSum() {
-//     for (int i = 0; i < config.sensorsCount; i++) {
-//         SensorConfig& sensorConfig = config.sensors[i];
-//         Sensor& sensorData = sensorsData.sensors[i];
-
-//         if (sensorConfig.type != POWER_SUM) {
-//             continue;
-//         }
-//         sensorData.set(NAN, now());
-//     }
-// }
-
-// long testButtonWater = -1e9;
-
-// int waterButtonState = -1;
+int buttonCount = 0;
 
 void loop() {
     timeTestDiff = millis();
@@ -535,108 +455,24 @@ void loop() {
         }
     }
 
-    /*
-    emonlib test
-    */
-
-    // Serial.println("I: " + String(emonSensor.Irms()));
-    // Serial.println("Power: " + String(emonSensor.power()));
-
-    // delay(100);
-    // otaUpdate.handle();
-    // return;
-
-    // int buttonState2 = digitalRead(FLASH_BUTTON);
-
-    // meteoLog.add(String(cnt2++) + " test");
-    // meteoLog.add("button: " + String(buttonState2));
-    // delay(1000);
-    // return;
-
-    /*
-    emonlib test
-    */
-
     delay(100);
 
-    timeTestDiffCheck("delay");
-
     otaUpdate.handle();
-    timeTestDiffCheck("ota handle");
 
     long updateSensorStart = millis();
     tryUpdateSensors();
-    timeTestDiffCheck("tryUpdateSensors");
 
     long updateSensorTimeDiff = millis() - updateSensorStart;
     if (maxUpdateSensorTime < updateSensorTimeDiff) {
         maxUpdateSensorTime = updateSensorTimeDiff;
     }
 
-    // if (checkTime(testButtonWater OK, 1000) && hasWaterSensor) {
-    if (checkTimeClass.checkButtonWater(1000) && hasWaterSensor) {
+    if (checkTime.checkButtonWater(1000) && hasWaterSensor) {
         waterSensorStorage.processInterval();
-        // int newButtonState = digitalRead(D2);
-        // if (waterButtonState == -1) {
-        //     waterButtonState = newButtonState;
-        // } else {
-        //     if (waterButtonState != newButtonState) {
-        //         delay(50);
-        //         newButtonState = digitalRead(D2);
-        //         if (waterButtonState != newButtonState) {
-        //             waterButtonState = newButtonState;
-
-        //             waterSpent += 5;
-        //             // led.change();
-        //             meteoLog.add("===== Water Sensor: add 5 liters. total: " + String(waterSpent));
-
-        //             waterSensorStorage.save(waterSpent);
-        //         }
-        //     }
-        // }
-
-        // meteoLog.add("===== Water Sensor button: " + String(newButtonState));
-        // meteoLog.add("===== Water Sensor total: " + String(waterSpent));
-
-        // // float value = electroSensorStorage.get();
-        // // meteoLog.add("electroSensorStorage: " + String(value));
-        // // electroSensorStorage.save(value + 1);
     }
 
-    int SMALL_INTERVAL = 3000;
-    // if (checkTime(timeIrmsSumSpend OK, SMALL_INTERVAL) && hasIrmsSensor) {
-    if (checkTimeClass.checkIrmsSumSpend(SMALL_INTERVAL) && hasIrmsSensor) {
+    if (checkTime.checkIrmsSumSpend(3000) && hasIrmsSensor) {
         electroSensorStorage.processInterval();
-
-        // float res = electroSensorStorage.save(powerSpent);
-        // meteoLog.add("electroSensorStorage init write: " + String(powerSpent) + " res: " + String(res));
-        // long ts = millis();
-
-        // meteoLog.add("IRMSsum start. Since last: " + String(ts - irmsSumSpentSmallTimestamp));
-        // // rxtx.send(cnt433, config.deviceName);
-        // // meteoLog.add("433 SENT !!!");
-
-        // long st = millis();
-        // float power = emonSensor.power();
-        // long timeWork = millis() - st;
-
-        // if (ts - irmsSumSpentSmallTimestamp < 6000) {
-        //     // long deltaKw = power - irmsSumSpentSmallValue;
-        //     float avgKw = (power + irmsSumSpentSmallValue) / 2;
-        //     meteoLog.add("IRMSsum avgWatt: " + String(avgKw));
-        //     float kwSpent = avgKw / 60 / 60 * ((ts - irmsSumSpentSmallTimestamp) / 1000.0);
-        //     irmsSumSpentIntervalSumValue += kwSpent;
-
-        //     powerSpent += kwSpent;
-
-        //     // meteoLog.add("IRMSsum deltaKw: " + String(deltaKw));
-        //     meteoLog.add("IRMSsum wattSpent: " + String(kwSpent));
-        // }
-
-        // irmsSumSpentSmallTimestamp = ts;
-        // irmsSumSpentSmallValue = power;
-
-        // meteoLog.add("IRMSsum, time spent: " + String(timeWork));
     }
 
     if (hasReceiver433) {
@@ -655,33 +491,13 @@ void loop() {
         }
     }
 
-    // if (checkTime(time433Send OK, 1000) && hasTransmitter433) {
-    if (checkTimeClass.check433Send(1000) && hasTransmitter433) {
+    if (checkTime.check433Send(1000) && hasTransmitter433) {
         cnt433++;
         rxtx.send(cnt433, config.deviceName);
         meteoLog.add("433 SENT !!!");
     }
 
-    timeTestDiffCheck("another sensors");
-
-    // if (checkTime(timeDataSend OK, SERVER_SENDING_TIMEOUT)) {
-    if (checkTimeClass.checkSendSensorToServer(10000)) {
-        // if (hasReceiver433) {
-        //     uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
-        //     uint8_t buflen = sizeof(buf);
-
-        //     if (rxtx.receive(buf, &buflen)) {
-        //         meteoLog.add("433 receive length: " + String(buflen));
-        //         String s;
-        //         for (int i = 0; i < buflen; i++) {
-        //             s += (char)buf[i];
-        //         }
-        //         meteoLog.add("433 receiev: " + s);
-        //     } else {
-        //         // meteoLog.add("433 receive nothing");
-        //     }
-        // }
-
+    if (checkTime.checkSendSensorToServer(10000)) {
         meteoLog.add("check time");
         setTime((time_t)timing2.getTime());
         meteoLog.add(String(timing2.getTime()));
@@ -691,12 +507,10 @@ void loop() {
         rs = millis() - rs;
         meteoLog.add("rssi " + String(rssi) + " " + String(rs));
 
-        timeTestDiffCheck("before beginning send");
         if (cache.empty()) {
             int statusCode = -1;
             if (wifiOn()) {
                 statusCode = sendDataApi(true);
-                timeTestDiffCheck("after sendDataApi");
             }
             if (statusCode != 200) {
                 cache.add(sensorsData);
@@ -713,23 +527,19 @@ void loop() {
                 cache.sendCache(sensorsData.sensorsNames);
             }
         }
-        timeTestDiffCheck("after send");
 
         maxLoopTime = 0;
         maxUpdateSensorTime = 0;
 
         meteoLog.add("Trying to update firmware...");
         processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), false);
-        timeTestDiffCheck("after processInternetUpdate");
 
         meteoLog.sendLog(config.deviceName, SEND_LOG_URL);
-        timeTestDiffCheck("after sendLog");
     }
 
     int buttonState = digitalRead(FLASH_BUTTON);
     if (buttonState == LOW) {
-        // if (checkTime(timeButtonPress OK, 800)) {
-        if (checkTimeClass.checkButtonPress(800)) {
+        if (checkTime.checkButtonPress(800)) {
             buttonCount++;
             meteoLog.add(String(buttonState));
         }
@@ -746,6 +556,4 @@ void loop() {
         wifiConfig.startPortal();
         led.off();
     }
-
-    timeTestDiffCheck("end loop");
 }
