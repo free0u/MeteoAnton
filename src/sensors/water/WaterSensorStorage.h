@@ -4,10 +4,15 @@
 #include "LittleFS.h"
 
 class WaterSensorStorage {
-   public:
-    WaterSensorStorage() {}
+   private:
+    bool isInited = false;
+    MeteoLog* log;
 
-    float get() {
+    int pin;
+    float waterSpent;
+    int waterButtonState = -1;
+
+    float getFromFs() {
         if (LittleFS.exists("/water.txt")) {
             File file = LittleFS.open("/water.txt", "r");
             float value = file.parseFloat();
@@ -19,7 +24,7 @@ class WaterSensorStorage {
         }
     }
 
-    float save(float value) {
+    float saveToFs(float value) {
         File dataFile = LittleFS.open("/water.txt", "w");
         if (!dataFile) {
             Serial.println("Failed to open config file water.txt for writing");
@@ -29,7 +34,52 @@ class WaterSensorStorage {
         dataFile.flush();
         dataFile.close();
 
-        return get();
+        return value;
+        // return get();
+    }
+
+   public:
+    WaterSensorStorage() {}
+    void init(int _pin, MeteoLog* _log) {
+        if (isInited) {
+            return;
+        }
+
+        pin = _pin;
+        log = _log;
+        waterSpent = getFromFs();
+        pinMode(pin, INPUT);
+        isInited = true;
+    }
+
+    float get2() { return waterSpent; }
+
+    void processInterval() {
+        int newButtonState = digitalRead(pin);
+        if (waterButtonState == -1) {
+            waterButtonState = newButtonState;
+        } else {
+            if (waterButtonState != newButtonState) {
+                delay(50);
+                newButtonState = digitalRead(pin);
+                if (waterButtonState != newButtonState) {
+                    waterButtonState = newButtonState;
+
+                    waterSpent += 5;
+                    // led.change();
+                    log->add("===== Water Sensor: add 5 liters. total: " + String(waterSpent));
+
+                    saveToFs(waterSpent);
+                }
+            }
+        }
+
+        log->add("===== Water Sensor button: " + String(newButtonState));
+        log->add("===== Water Sensor total: " + String(waterSpent));
+
+        // float value = electroSensorStorage.get();
+        // meteoLog.add("electroSensorStorage: " + String(value));
+        // electroSensorStorage.save(value + 1);
     }
 };
 

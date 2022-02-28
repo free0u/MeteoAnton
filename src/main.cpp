@@ -331,18 +331,18 @@ void initSensors() {
                 // powerSpent = electroSensorStorage.get();
                 break;
             case WATER_SPENT:
-                pinMode(sensorConfig.pin1, INPUT);
                 hasWaterSensor = true;
                 // waterSpent = 0;
                 // waterSensorStorage.save(0);
-                waterSpent = waterSensorStorage.get();
+                // waterSpent = waterSensorStorage.get();
+                waterSensorStorage.init(sensorConfig.pin1, &meteoLog);
             default:;
         }
     }
     meteoLog.add("SensorsData init... Done");
 
     meteoLog.add("electroSensorStorage init read: " + String(electroSensorStorage.get2()));
-    meteoLog.add("waterSensorStorage init read: " + String(waterSpent));
+    meteoLog.add("===== Water Sensor init read: " + String(waterSensorStorage.get2()));
 }
 
 // timers
@@ -403,7 +403,8 @@ float readSensor(SensorConfig& sensorConfig) {
             return electroSensorStorage.get2();
             // return powerSpent;
         case WATER_SPENT:
-            return waterSpent;
+            // return waterSpent;
+            return waterSensorStorage.get2();
         case MAX_LOOP_TIME:
             return maxLoopTime > 0 ? maxLoopTime : NAN;
         case UPDATE_SENSORS_TIME:
@@ -519,7 +520,7 @@ int cnt433 = 0;
 
 // long testButtonWater = -1e9;
 
-int waterButtonState = -1;
+// int waterButtonState = -1;
 
 void loop() {
     timeTestDiff = millis();
@@ -574,31 +575,32 @@ void loop() {
 
     // if (checkTime(testButtonWater OK, 1000) && hasWaterSensor) {
     if (checkTimeClass.checkButtonWater(1000) && hasWaterSensor) {
-        int newButtonState = digitalRead(D2);
-        if (waterButtonState == -1) {
-            waterButtonState = newButtonState;
-        } else {
-            if (waterButtonState != newButtonState) {
-                delay(50);
-                newButtonState = digitalRead(D2);
-                if (waterButtonState != newButtonState) {
-                    waterButtonState = newButtonState;
+        waterSensorStorage.processInterval();
+        // int newButtonState = digitalRead(D2);
+        // if (waterButtonState == -1) {
+        //     waterButtonState = newButtonState;
+        // } else {
+        //     if (waterButtonState != newButtonState) {
+        //         delay(50);
+        //         newButtonState = digitalRead(D2);
+        //         if (waterButtonState != newButtonState) {
+        //             waterButtonState = newButtonState;
 
-                    waterSpent += 5;
-                    // led.change();
-                    meteoLog.add("===== Water Sensor: add 5 liters. total: " + String(waterSpent));
+        //             waterSpent += 5;
+        //             // led.change();
+        //             meteoLog.add("===== Water Sensor: add 5 liters. total: " + String(waterSpent));
 
-                    waterSensorStorage.save(waterSpent);
-                }
-            }
-        }
+        //             waterSensorStorage.save(waterSpent);
+        //         }
+        //     }
+        // }
 
-        meteoLog.add("===== Water Sensor button: " + String(newButtonState));
-        meteoLog.add("===== Water Sensor total: " + String(waterSpent));
+        // meteoLog.add("===== Water Sensor button: " + String(newButtonState));
+        // meteoLog.add("===== Water Sensor total: " + String(waterSpent));
 
-        // float value = electroSensorStorage.get();
-        // meteoLog.add("electroSensorStorage: " + String(value));
-        // electroSensorStorage.save(value + 1);
+        // // float value = electroSensorStorage.get();
+        // // meteoLog.add("electroSensorStorage: " + String(value));
+        // // electroSensorStorage.save(value + 1);
     }
 
     int SMALL_INTERVAL = 3000;
