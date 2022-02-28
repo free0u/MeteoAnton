@@ -355,55 +355,42 @@ DeviceConfig getWaveConfig() {
     return config;
 }
 
+std::vector<SensorConfig> getGeneralSensors() {
+    std::vector<SensorConfig> generalSensors = {
+        buildUptimeSensor(10000, "uptime", "uptime"),                               // ======================
+        buildBuildVersionSensor(10000, "build_version", "build_version"),           // ======================
+        buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),  // ======================
+        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),                // ======================
+        buildRssiSensor(10000, "rssi", "rssi"),                                     // ======================
+    };
+
+    return generalSensors;
+}
+
 DeviceConfig getOpusConfig() {
     DeviceConfig config = DeviceConfig();
     config.deviceName = "opus";
-    // SEND_DATA_URL
     config.sensorsApiUrl = SEND_DATA_URL + config.deviceName;
     config.sensorsSendTimeout = 58000;
     config.logSendTimeout = 58000;
 
-    /*
-    13                                         Found device 0 with address: {0x28, 0xB0, 0xF8, 0x75, 0xD0, 0x01, 0x3C,
-0x68} 28B0F875D0013C68 2021-07-09 16:23:49 name:opus type:log 7567#15 Found device 1 with address: {0x28, 0x5C, 0xCF,
-0x95, 0xF0, 0x01, 0x3C, 0x34} 285CCF95F0013C34 2021-07-09 16:23:49 name:opus type:log 7625#17 Found device 2 with
-address: {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9} 28364B95F0FF3CA9 2021-07-09 16:23:49 name:opus type:log
-7698#19 Found device 3 with address: {0x28, 0x47, 0x60, 0x12, 0x33, 0x14, 0x01, 0x73} 2847601233140173
-    */
-
-    // DeviceAddress addrTempIn1 = {0x28, 0xEC, 0xBE, 0x26, 0x0A, 0x00, 0x00, 0xB4};
-    // DeviceAddress addrTempIn2 = {0x28, 0xAA, 0x7A, 0xB3, 0x1A, 0x13, 0x02, 0x61};
-    DeviceAddress addrTempIn3 = {0x28, 0x47, 0x60, 0x12, 0x33, 0x14, 0x01, 0x73};
-    // DeviceAddress addrTempIn4 = {0x28, 0x6C, 0xA5, 0x25, 0x0A, 0x00, 0x00, 0xDA};
-
-    DeviceAddress newOut = {0x28, 0xFF, 0x1D, 0xD6, 0x65, 0x18, 0x03, 0x38};
-
-    // DeviceAddress addrTempTest1 = {0x28, 0xB0, 0xF8, 0x75, 0xD0, 0x01, 0x3C, 0x68};
-    // DeviceAddress addrTempTest2 = {0x28, 0x5C, 0xCF, 0x95, 0xF0, 0x01, 0x3C, 0x34};
-    // DeviceAddress addrTempTest3 = {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9};
-
-    // SensorConfig[] aaa = new SensorConfig[]{
-    //         buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in")
-    // }
+    DeviceAddress addrTempIn = {0x28, 0x47, 0x60, 0x12, 0x33, 0x14, 0x01, 0x73};
+    DeviceAddress addrTempOut = {0x28, 0xFF, 0x1D, 0xD6, 0x65, 0x18, 0x03, 0x38};
 
     std::vector<SensorConfig> sensorConfigs = {
-        buildDallasSensor(D6, addrTempIn3, 10000, "temp_in", "temp_in"),
-        buildDallasSensor(D6, newOut, 10000, "temp_out", "temp_out"),
-        // buildTransmitter433Sensor(20, D5, 21, 10000, "transmitter_433", "transmitter_433"),
-        // buildDallasSensor(D6, addrTempTest1, 10000, "temp_in1", "temp_in1"), // парилка
-        // buildDallasSensor(D6, addrTempTest2, 10000, "temp_in2", "temp_in2"),
-        // buildDallasSensor(D6, addrTempTest3, 10000, "temp_in3", "temp_in3"),
+        buildDallasSensor(D6, addrTempIn, 10000, "temp_in", "temp_in"),
+        buildDallasSensor(D6, addrTempOut, 10000, "temp_out", "temp_out"),
+        buildDhtSensor(D1, 22, 10000, "hum_in", "hum_in"),
+        buildCo2SenseairSensor(D7, D8, 10000, "co2", "co2"),
 
-        buildDhtSensor(D1, 22, 10000, "hum_in", "hum_in"), buildCo2SenseairSensor(D7, D8, 10000, "co2", "co2"),
-        buildUptimeSensor(10000, "uptime", "uptime"), buildBuildVersionSensor(10000, "build_version", "build_version"),
-        buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
-        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"), buildRssiSensor(10000, "rssi", "rssi"),
         buildMaxLoopTimeSensor(10000, "max_loop_time", "max_loop_time"),
         buildUpdateSensorTimeSensor(10000, "max_update_sensor_time", "max_update_sensor_time")};
 
+    std::vector<SensorConfig> generalSensors = getGeneralSensors();
+    sensorConfigs.insert(sensorConfigs.end(), generalSensors.begin(), generalSensors.end());
+
     config.sensors = sensorConfigs;
     config.sensorsCount = sensorConfigs.size();
-
     return config;
 }
 
@@ -446,31 +433,18 @@ DeviceConfig getChelConfig() {
     DeviceAddress newOut = {0x28, 0xEC, 0xBE, 0x26, 0x0A, 0x00, 0x00, 0xB4};
     DeviceAddress newIn = {0x28, 0xAA, 0x7A, 0xB3, 0x1A, 0x13, 0x02, 0x61};
 
-    // 288C993B0400008F
-    // DeviceAddress addrTempOut = {0x28, 0x8C, 0x99, 0x3B, 0x04, 0x00, 0x00, 0x8F};
-
-    // 286164118D9646D3
-    // DeviceAddress addrTempInBak = {0x28, 0x61, 0x64, 0x11, 0x8D, 0x96, 0x46, 0xD3};
-
-    // 28616411BDD852B6
-    // DeviceAddress addrTempIn = {0x28, 0x61, 0x64, 0x11, 0xBD, 0xD8, 0x52, 0xB6};
-
     std::vector<SensorConfig> sensorConfigs = {
-        // buildDallasSensor(D6, addrTempIn, 10000, "temp_in", "temp_in"),
-        // buildDallasSensor(D6, addrTempInBak, 10000, "temp_in_bak", "temp_in_bak"),
-        // buildDallasSensor(D6, addrTempOut, 10000, "temp_out", "temp_out"),
         buildDallasSensor(D6, newIn, 10000, "temp_in", "temp_in"),
         buildDallasSensor(D6, newOut, 10000, "temp_out", "temp_out"),
         buildDhtSensor(D3, 22, 10000, "hum_in", "hum_in"),
         buildCo2SenseairSensor(D7, D8, 10000, "co2", "co2"),
-        buildUptimeSensor(10000, "uptime", "uptime"),
-        buildBuildVersionSensor(10000, "build_version", "build_version"),
-        buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
-        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
     };
+
+    std::vector<SensorConfig> generalSensors = getGeneralSensors();
+    sensorConfigs.insert(sensorConfigs.end(), generalSensors.begin(), generalSensors.end());
+
     config.sensors = sensorConfigs;
     config.sensorsCount = sensorConfigs.size();
-
     return config;
 }
 
@@ -556,21 +530,16 @@ DeviceConfig getDimpleConfig() {
     DeviceAddress addrTempIn1 = {0x28, 0xFF, 0x64, 0x01, 0xB0, 0x6D, 0x5F, 0x3C};
 
     std::vector<SensorConfig> sensorConfigs = {
-        // buildTransmitter433Sensor(20, D5, 21, 10000, "transmitter_433", "transmitter_433"),
-        // buildReceiver433Sensor(D5, 20, 21, 10000, "receiver_433", "receiver_433"),
-        // buildIrmsSensor(30, 210, 10000, "irms", "irms"),
         buildPowerSensor(30, 210, 10000, "power", "power"),
-        // buildPowerSumSensor(10000, "power_sum", "power_sum"),
         buildPowerSpentSensor(10000, "power_spent", "power_spent"),
-
         buildDallasSensor(D1, addrTempIn1, 10000, "temp_in", "temp_in"),
+    };
 
-        buildUptimeSensor(10000, "uptime", "uptime"), buildBuildVersionSensor(10000, "build_version", "build_version"),
-        buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
-        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"), buildRssiSensor(10000, "rssi", "rssi")};
+    std::vector<SensorConfig> generalSensors = getGeneralSensors();
+    sensorConfigs.insert(sensorConfigs.end(), generalSensors.begin(), generalSensors.end());
+
     config.sensors = sensorConfigs;
     config.sensorsCount = sensorConfigs.size();
-
     return config;
 }
 
@@ -582,28 +551,20 @@ DeviceConfig getChelFlanerConfig() {
     config.logSendTimeout = 58000;
 
     DeviceAddress addrTempIn = {0x28, 0x36, 0x4B, 0x95, 0xF0, 0xFF, 0x3C, 0xA9};
-    // DeviceAddress addrTempIn1 = {0x28, 0xFF, 0x64, 0x01, 0xB0, 0x6D, 0x5F, 0x3C};
-    // DeviceAddress addrTempIn2 = {0x28, 0xFF, 0x64, 0x01, 0xB0, 0x68, 0x0B, 0x79};
     DeviceAddress addrTempIn3 = {0x28, 0xFF, 0x42, 0x75, 0xD0, 0x01, 0x3C, 0xCB};
-    // DeviceAddress addrTempIn4 = {0x28, 0x66, 0x8D, 0x75, 0xD0, 0x01, 0x3C, 0xA1};
 
     std::vector<SensorConfig> sensorConfigs = {
         buildDhtSensor(D6, 11, 10000, "hum_in", "hum_in"),
         buildDallasSensor(D1, addrTempIn, 10000, "temp_in", "temp_in"),
-        // buildDallasSensor(D1, addrTempIn1, 10000, "temp_in1", "temp_in1"),
-        // buildDallasSensor(D1, addrTempIn2, 10000, "temp_in2", "temp_in2"),
         buildDallasSensor(D1, addrTempIn3, 10000, "temp_out", "temp_out"),
         buildWaterSpentSensor(D2, 10000, "water_spent", "water_spent"),
-        // buildDallasSensor(D1, addrTempIn4, 10000, "temp_in4", "temp_in4"),
-        buildUptimeSensor(10000, "uptime", "uptime"),
-        buildBuildVersionSensor(10000, "build_version", "build_version"),
-        buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
-        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
-        buildRssiSensor(10000, "rssi", "rssi"),
     };
+
+    std::vector<SensorConfig> generalSensors = getGeneralSensors();
+    sensorConfigs.insert(sensorConfigs.end(), generalSensors.begin(), generalSensors.end());
+
     config.sensors = sensorConfigs;
     config.sensorsCount = sensorConfigs.size();
-
     return config;
 }
 
@@ -616,15 +577,13 @@ DeviceConfig getChelOsmosConfig() {
 
     std::vector<SensorConfig> sensorConfigs = {
         buildWaterSpentSensor(D2, 10000, "water_spent", "water_spent"),
-        buildUptimeSensor(10000, "uptime", "uptime"),
-        buildBuildVersionSensor(10000, "build_version", "build_version"),
-        buildFirmwareVersionSensor(10000, "firmware_version", "firmware_version"),
-        buildFreeHeapVersionSensor(10000, "free_heap", "free_heap"),
-        buildRssiSensor(10000, "rssi", "rssi"),
     };
+
+    std::vector<SensorConfig> generalSensors = getGeneralSensors();
+    sensorConfigs.insert(sensorConfigs.end(), generalSensors.begin(), generalSensors.end());
+
     config.sensors = sensorConfigs;
     config.sensorsCount = sensorConfigs.size();
-
     return config;
 }
 
