@@ -236,7 +236,7 @@ DeviceConfig getDeviceConfigByName(String const& deviceName) {
     if (deviceName == "chel_flaner") {
         return getChelFlanerConfig(deviceName);
     }
-    if (deviceName == "chel_dimple") {
+    if (deviceName == "dimple") {
         return getDimpleConfig(deviceName);
     }
 
