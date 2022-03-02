@@ -33,7 +33,8 @@ class Sensor {
         if (ts < present || now() < present || ts > 2082758400) {  // 01/01/2036 @ 12:00am (UTC)
             return NAN;
         }
-        if (now() - ts < SENSOR_CORRECT_TIMEOUT) {
+        // if (now() - ts < SENSOR_CORRECT_TIMEOUT) {
+        if (now() - ts < 60) {
             return value;
         }
         return NAN;

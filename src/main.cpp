@@ -115,12 +115,14 @@ void setup() {
 
     int chipId = ESP.getChipId();
     Serial.printf("\n\nChipId: %d\n\n", chipId);
-    config = getDeviceConfigById(chipId);
+    String deviceName = getDeviceNameById(chipId);
 
-    if (wifiConfig.connect(config.deviceName)) {
+    if (wifiConfig.connect(deviceName)) {
         led.off();
-        processInternetUpdate(config.deviceName, String(FIRMWARE_VERSION), true);
+        processInternetUpdate(deviceName, String(FIRMWARE_VERSION), true);
     }
+
+    config = getDeviceConfigById(chipId);
 
     _debugOutputBuffer = (char*)calloc(2048, sizeof(char));
     SaveCrash.print();
@@ -389,7 +391,7 @@ void tryUpdateSensors() {
 
         if (checkTime.checkSensorByInd(i, sensorConfig.timeout)) {
             float value = readSensor(sensorConfig);
-            meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.debug_name) + " read: " + value);
+            meteoLog.add(String(sensorConfig.type) + " " + String(sensorConfig.field_name) + " read: " + value);
             sensorData.set(value, now());
         }
     }
