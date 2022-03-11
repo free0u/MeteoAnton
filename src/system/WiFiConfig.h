@@ -141,11 +141,16 @@ class WiFiConfig {
         String ret = "";
         for (int i = 0; i < wifiList.size(); i++) {
             WiFiCred cred = wifiList[i];
-            ret += String(i) + ":" + cred.ssid + ":" + cred.password.charAt(cred.password.length() - 1);
+            String lastChar = "";
+            if (cred.password.length() > 0) {
+                lastChar = cred.password.charAt(cred.password.length() - 1);
+            }
+            ret += String(i) + ":" + cred.ssid + ":" + lastChar;
             if (i < wifiList.size() - 1) {
                 ret += ",";
             }
         }
+        ret += "$";
         return ret;
     }
 
