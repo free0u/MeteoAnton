@@ -181,7 +181,7 @@ class WiFiConfig {
         ESP8266WiFiMulti wm;
         insertCredsIntoWm(wm);
 
-        wl_status_t status = wm.run();
+        wl_status_t status = wm.run(8000);
         if (status == WL_CONNECTED) {
             led->blink(2);
             log->add("[WIFI] multi connected");
