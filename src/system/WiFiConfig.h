@@ -7,7 +7,7 @@
 #include <ESP8266WiFiMulti.h>
 #include <WiFiManager.h>
 
-#include "modules/led/led.h"
+#include "modules/led/Led.h"
 #include "system/MeteoLog.h"
 
 struct WiFiCred {
