@@ -34,6 +34,15 @@ class Led {
             on();
         }
     }
+
+    void blink(int count) {
+        for (int i = 0; i < count; i++) {
+            change();
+            delay(200);
+            change();
+            delay(200);
+        }
+    }
 };
 
 #endif

@@ -63,7 +63,7 @@ class SensorsCache {
             return false;
         }
 
-        Serial.println("Sending data...");
+        Serial.println("Sending cache data...");
 
         WiFiClient client;
         HTTPClient http;

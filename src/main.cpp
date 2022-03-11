@@ -117,7 +117,8 @@ void setup() {
     Serial.printf("\n\nChipId: %d\n\n", chipId);
     String deviceName = getDeviceNameById(chipId);
 
-    if (wifiConfig.connect(deviceName)) {
+    led.blink(3);
+    if (WiFiConfig::connectSavedWifi(deviceName)) {
         led.off();
         processInternetUpdate(deviceName, String(FIRMWARE_VERSION), true);
     }
@@ -130,11 +131,24 @@ void setup() {
 
     meteoLog.init();
     meteoLog.add("Booting...");
-    meteoLog.add("IP address: " + WiFi.localIP().toString());
+    meteoLog.add("[WIFI] IP address: " + WiFi.localIP().toString());
+    meteoLog.add("[WIFI] ssid: " + WiFi.SSID());
+
+    meteoLog.add("LittleFS init...");
+    LittleFS.begin();
+    meteoLog.add("LittleFS init... Done");
+
+    wifiConfig.init(&meteoLog, &led);
+    wifiConfig.connectMultiIfNeeded();
+    if (WiFiConfig::isConnected()) {
+        led.off();
+        wifiConfig.saveConnectedWifiData(WiFi.SSID(), WiFi.psk());
+    }
+    meteoLog.add("[WIFI] saved list: " + wifiConfig.getWiFiListStringForLog());
 
     // configure and start OTA update server
     meteoLog.add("OTA server init...");
-    otaUpdate.init(config.deviceName);
+    otaUpdate.init(deviceName);
     meteoLog.add("OTA server init... Done");
 
     // init 433
@@ -153,10 +167,6 @@ void setup() {
     meteoLog.add("Timing 2...");
     timing2.init(&meteoLog);
     meteoLog.add("Timing 2 init... Done");
-
-    meteoLog.add("LittleFS init...");
-    LittleFS.begin();
-    meteoLog.add("LittleFS init... Done");
 
     // initSensors
     initSensors();
@@ -209,6 +219,23 @@ void setupHandles() {
         }
         Serial.println(inputMessage);
         request->send(200, "text/plain", "OK");
+    });
+    webApi.on("/deleteCred", HTTP_GET, [](AsyncWebServerRequest* request) {
+        String inputMessage;
+        String ret = "ERROR";
+        if (request->hasParam("ind")) {
+            inputMessage = request->getParam("ind")->value();
+            int ind = inputMessage.toInt();
+            if (!(ind == 0 && inputMessage != "0")) {
+                wifiConfig.removeCredByInd(ind);
+                ret = wifiConfig.getWiFiListStringForLog();
+                meteoLog.add("[WIFI] saved list: " + ret);
+            }
+        } else {
+            inputMessage = "No message sent";
+        }
+        Serial.println(inputMessage);
+        request->send(200, "text/plain", ret);
     });
     webApi.begin();
 }

@@ -21,11 +21,11 @@ struct DeviceConfig {
 
 vector<SensorConfig> getGeneralSensors() {
     vector<SensorConfig> generalSensors = {
-        buildUptimeSensor("uptime"),                     // ======================
-        buildBuildVersionSensor("build_version"),        // ======================
-        buildFirmwareVersionSensor("firmware_version"),  // ======================
-        buildFreeHeapVersionSensor("free_heap"),         // ======================
-        buildRssiSensor("rssi"),                         // ======================
+        buildUptimeSensor("uptime"),
+        buildBuildVersionSensor("build_version"),
+        buildFirmwareVersionSensor("firmware_version"),
+        buildFreeHeapVersionSensor("free_heap"),
+        buildRssiSensor("rssi"),
     };
 
     return generalSensors;
