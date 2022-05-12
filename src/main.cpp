@@ -237,6 +237,22 @@ void setupHandles() {
         Serial.println(inputMessage);
         request->send(200, "text/plain", ret);
     });
+    webApi.on("/setPowerSpent", HTTP_GET, [](AsyncWebServerRequest* request) {
+        String inputMessage;
+        String ret = "ERROR";
+        if (request->hasParam("value")) {
+            inputMessage = request->getParam("value")->value();
+            int value = inputMessage.toInt();
+            if (!(value == 0 && inputMessage != "0")) {
+                electroSensorStorage.setPowerSpent(value);
+                ret = String(electroSensorStorage.getPowerSpent());
+            }
+        } else {
+            inputMessage = "No message sent";
+        }
+        Serial.println(inputMessage);
+        request->send(200, "text/plain", ret);
+    });
     webApi.begin();
 }
 

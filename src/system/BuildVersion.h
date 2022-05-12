@@ -1,5 +1,5 @@
 #ifndef BUILD_VERSION_h
 #define BUILD_VERSION_h
-#define BUILD_VERSION 2525
+#define BUILD_VERSION 2547
 #define FIRMWARE_VERSION 88
 #endif

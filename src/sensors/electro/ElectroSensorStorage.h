@@ -10,7 +10,7 @@ class ElectroSensorStorage {
     EmonLibSensor* emon;
     MeteoLog* log;
 
-    float powerSpent;
+    float powerSpent = -1;
     float lastPower = 0;
     long lastTs = 0;
 
@@ -22,7 +22,7 @@ class ElectroSensorStorage {
             return value;
         } else {
             Serial.println("electro.txt not exists");
-            return 0;
+            return -20000;
         }
     }
 
@@ -53,6 +53,11 @@ class ElectroSensorStorage {
     }
 
     float getPowerSpent() { return powerSpent; }
+
+    void setPowerSpent(float value) {
+        powerSpent = value;
+        saveToFs(powerSpent);
+    }
 
     void processInterval() {
         long tsNow = millis();
